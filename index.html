@@ -111,6 +111,7 @@ h1 em{color:#ed6736}.primary,.qr-action{background:linear-gradient(105deg,#ff8b4
 const SUPABASE_URL='https://mplmmoehzsmohjikpqvj.supabase.co';
 const SUPABASE_KEY='sb_publishable_ER9usHRQGYTV9hG0eqZDpA_DnapX9qI';
 const SESSION_KEY='sadakatqr_auth_v1';
+const APP_URL='https://ftmotiondesign.github.io/sadakatqr/';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let modalType='',session=null,authUser=null,authBusy=false;
@@ -160,7 +161,7 @@ async function submitAuth(e){
   const email=$('#email').value.trim().toLowerCase();
   if(mode==='register'){
    const full_name=$('#aname').value.trim();if(full_name.length<3)throw Error('Lütfen ad soyad yaz.');
-   const d=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(location.origin+location.pathname),'POST',{email,password,data:{full_name}});
+   const d=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(APP_URL),'POST',{email,password,data:{full_name}});
    if(d.user?.identities?.length===0){err.style.color='#af3430';err.textContent='Bu e-posta adresi zaten kayıtlı olabilir. Giriş Yap veya Şifremi Unuttum seçeneğini kullan.';return}
    if(d.access_token){await api('/auth/v1/logout','POST',null,d.access_token).catch(()=>{});}
    session=null;authUser=null;localStorage.removeItem(SESSION_KEY);
@@ -174,7 +175,7 @@ async function submitAuth(e){
 async function forgotPassword(){
  const email=$('#email')?.value?.trim(),err=$('#err');
  if(!email){err.textContent='Önce e-posta adresini yaz.';return}
- try{await api('/auth/v1/recover?redirect_to='+encodeURIComponent(location.origin+location.pathname),'POST',{email});err.style.color='#417e52';err.textContent='Adres kayıtlıysa şifre yenileme e-postası gönderilir.'}catch(ex){err.textContent=ex.message}
+ try{await api('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_URL),'POST',{email});err.style.color='#417e52';err.textContent='Adres kayıtlıysa şifre yenileme e-postası gönderilir.'}catch(ex){err.textContent=ex.message}
 }
 function enter(u){
  if(!u)return;
@@ -189,6 +190,7 @@ function enter(u){
 async function restoreAuth(){
  const url=new URL(location.href);let token=url.searchParams.get('access_token'),refresh=url.searchParams.get('refresh_token'),type=url.searchParams.get('type');
  const hash=new URLSearchParams(location.hash.slice(1));token=token||hash.get('access_token');refresh=refresh||hash.get('refresh_token');type=type||hash.get('type');
+ const authError=hash.get('error_description')||url.searchParams.get('error_description');if(authError){showModal('login');$('#err').textContent='Bağlantının süresi dolmuş olabilir. Yeni şifre yenileme isteği gönder.';history.replaceState(null,'',location.pathname);return}
  if(token&&refresh){saveSession({access_token:token,refresh_token:refresh,expires_in:Number(hash.get('expires_in')||3600)});history.replaceState(null,'',location.pathname);if(type==='recovery'){showModal('reset');return}}
  if(authBusy)return;const s=await ensureSession();if(!s)return;
  try{authUser=await api('/auth/v1/user','GET',null,s.access_token);if(authUser?.id)enter(users()[0])}
