@@ -96,7 +96,8 @@ h1 em{color:#ed6736}.primary,.qr-action{background:linear-gradient(105deg,#ff8b4
 .loyalty-details button,.offer-info button,.cards-sample button{background:#fff0e4;color:#ca5b30}
 .account-icon,.cards-sample-icon,.reward-empty .symbol{background:#ffe8d8}
 .secondary{background:#fff;border-color:#e1bba5;color:#784a3b}
-</style></head><body><main class="app"><section id="welcome" class="welcome"><header class="head"><div class="brand">✦ Sadakat <b>Kartım</b></div><button class="help" onclick="showModal('how')">ⓘ Nasıl Kullanılır?</button></header><h1>Alışveriş yap.<br><em>Biriktir, kazan!</em></h1><p>Sevdiğin işletmelerde ziyaretlerin hediyeye dönüşsün.</p><div class="hero"><div class="copy">Tek QR ile<br>daha çok ödül ✨</div><div class="mock"><div><div class="qrmini">▦</div>Sadakat Kartım<br>QR Kartım</div></div></div><div class="steps"><div class="step"><i>▦</i><strong>Tek QR</strong><small>Kolay katılım</small></div><div class="step"><i>☕</i><strong>Damga Biriktir</strong><small>Ziyaret ettikçe</small></div><div class="step"><i>🎁</i><strong>Hediyeni Al</strong><small>Ödülünü kazan</small></div></div><button class="primary" onclick="showModal('register')">Hemen Ücretsiz Üye Ol →</button><button class="secondary" onclick="showModal('login')">Zaten Üyeyim · Giriş Yap</button><p class="notice">GELİŞTİRME SÜRÜMÜ · Bu cihazda çalışan üyelik denemesi</p></section>
+.password-box{display:flex;align-items:center;position:relative}.password-box input{width:100%;padding-right:60px}.password-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:#755142;font-size:22px;padding:10px;cursor:pointer}
+</style></head><body><main class="app"><section id="welcome" class="welcome"><header class="head"><div class="brand">✦ Sadakat <b>Kartım</b></div><button class="help" onclick="showModal('how')">ⓘ Nasıl Kullanılır?</button></header><h1>Alışveriş yap.<br><em>Biriktir, kazan!</em></h1><p>Sevdiğin işletmelerde ziyaretlerin hediyeye dönüşsün.</p><div class="hero"><div class="copy">Tek QR ile<br>daha çok ödül ✨</div><div class="mock"><div><div class="qrmini">▦</div>Sadakat Kartım<br>QR Kartım</div></div></div><div class="steps"><div class="step"><i>▦</i><strong>Tek QR</strong><small>Kolay katılım</small></div><div class="step"><i>☕</i><strong>Damga Biriktir</strong><small>Ziyaret ettikçe</small></div><div class="step"><i>🎁</i><strong>Hediyeni Al</strong><small>Ödülünü kazan</small></div></div><button class="primary" onclick="showModal('register')">Hemen Ücretsiz Üye Ol →</button><button class="secondary" onclick="showModal('login')">Zaten Üyeyim · Giriş Yap</button><p class="notice">GELİŞTİRME SÜRÜMÜ · Gerçek e-posta üyeliği testi</p></section>
 <section id="dash" class="dash"><div class="dash-top"><header class="head"><div class="brand">♛ Sadakat <b>Kartım</b></div><button class="help" onclick="logout()">Çıkış Yap</button></header><h1>Merhaba <em id="firstName"></em> 👋</h1><p>Bugün yeni fırsatlar seni bekliyor.</p></div>
 <div class="dash-body">
 <div class="membercard"><h2>▦ &nbsp;Üye QR Kodum</h2><div class="member-layout"><div class="member-left"><div class="muted">Kasada bu kodu göstererek fırsatlardan yararlanabilirsin.</div><div class="member-name" id="memberName"></div><div class="member-no" id="memberId"></div><button class="qr-action" onclick="showMemberQR()">▦ &nbsp; QR'ı Göster ›</button></div><div class="qrbox" id="qrbox">QR oluşturuluyor...</div></div></div>
@@ -107,13 +108,90 @@ h1 em{color:#ed6736}.primary,.qr-action{background:linear-gradient(105deg,#ff8b4
 <div id="overlay" class="shade" onclick="if(event.target===this)hideModal()"><div class="modal"><button class="close" onclick="hideModal()">✕</button><div id="modalContent"></div></div></div>
 <script src="./qrcode.min.js"></script>
 <script>
-const K='ftmotion_sadakat_test_users_v1',S='ftmotion_sadakat_test_session_v1';const $=s=>document.querySelector(s);const users=()=>{try{return JSON.parse(localStorage.getItem(K)||'[]')}catch{return []}};const save=x=>localStorage.setItem(K,JSON.stringify(x));const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let modalType='';
-function showModal(type){modalType=type;let title=type==='register'?'Ücretsiz Üye Ol':type==='login'?'Giriş Yap':'Nasıl Kullanılır?';let body=type==='how'?'<p>Tek QR ile tüm anlaşmalı işletmelerde sadakat avantajı.</p><div class="info"><div>👤 <b>Üye Ol</b>Kartın oluşsun.</div><div>▦ <b>QR Göster</b>Kasada okut.</div><div>✅ <b>Damga Biriktir</b>İşletme onaylasın.</div><div>🎁 <b>Hediyeni Al</b>Şartları tamamla.</div></div><button class="primary" onclick="showModal(\'register\')">Hemen Üye Ol</button>':'<form onsubmit="submitAuth(event)">'+(type==='register'?'<label class="field">Ad Soyad<input id="aname" required minlength="3" autocomplete="name"></label>':'')+'<label class="field">E-posta<input type="email" id="email" required autocomplete="email"></label><label class="field">Şifre<input type="password" id="password" required minlength="6" autocomplete="'+(type==='register'?'new-password':'current-password')+'"></label><div id="err" class="error"></div><button class="primary" type="submit">'+(type==='register'?'Üye Ol ve QR Oluştur':'Giriş Yap')+'</button><p class="notice">Bu testte bilgiler yalnızca bu cihazda saklanır.</p></form>';$('#modalContent').innerHTML='<h2>'+title+'</h2>'+body;$('#overlay').classList.add('show')}
+const SUPABASE_URL='https://mplmmoehzsmohjikpqvj.supabase.co';
+const SUPABASE_KEY='sb_publishable_ER9usHRQGYTV9hG0eqZDpA_DnapX9qI';
+const SESSION_KEY='sadakatqr_auth_v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let modalType='',session=null,authUser=null;
+function users(){return authUser?[{id:authUser.id,name:authUser.user_metadata?.full_name||authUser.email?.split('@')[0]||'Üye',email:authUser.email}]:[]}
+function showModal(type){
+ modalType=type;const title=type==='register'?'Ücretsiz Üye Ol':type==='login'?'Giriş Yap':type==='reset'?'Yeni Şifre Belirle':'Nasıl Kullanılır?';
+ let body=type==='how'?'<p>Tek QR ile anlaşmalı işletmelerde sadakat avantajı.</p><div class="info"><div>👤 <b>Üye Ol</b>Kartın oluşsun.</div><div>▦ <b>QR Göster</b>Kasada okut.</div><div>✅ <b>Damga Biriktir</b>İşletme onaylasın.</div><div>🎁 <b>Hediyeni Al</b>Şartları tamamla.</div></div><button class="primary" onclick="showModal(\'register\')">Hemen Üye Ol</button>':
+ '<form onsubmit="submitAuth(event)">'+(type==='register'?'<label class="field">Ad Soyad<input id="aname" required minlength="3" autocomplete="name"></label>':'')+
+ (type==='reset'?'':'<label class="field">E-posta<input type="email" id="email" required autocomplete="email"></label>')+
+ '<label class="field">'+(type==='reset'?'Yeni Şifre':'Şifre')+'<div class="password-box"><input type="password" id="password" required minlength="8" autocomplete="'+(type==='register'||type==='reset'?'new-password':'current-password')+'"><button type="button" class="password-toggle" id="passwordToggle" onclick="togglePassword()" aria-label="Şifreyi göster" aria-pressed="false">👁</button></div></label>'+
+ '<div id="err" class="error" role="status"></div><button class="primary" id="authSubmit" type="submit">'+(type==='register'?'Üye Ol':type==='reset'?'Şifreyi Kaydet':'Giriş Yap')+'</button>'+
+ (type==='login'?'<button class="secondary" type="button" onclick="forgotPassword()">Şifremi Unuttum</button>':'')+
+ '<p class="notice">SadakatQR hesabın farklı cihazlarda da kullanılabilir. E-posta onayı gerekebilir.</p></form>';
+ $('#modalContent').innerHTML='<h2>'+title+'</h2>'+body;$('#overlay').classList.add('show');
+}
 function hideModal(){$('#overlay').classList.remove('show')}
-async function hash(p,s){let x=new TextEncoder().encode(s+':'+p), b=await crypto.subtle.digest('SHA-256',x);return Array.from(new Uint8Array(b)).map(v=>v.toString(16).padStart(2,'0')).join('')}
-async function submitAuth(e){e.preventDefault();const email=$('#email').value.trim().toLowerCase(),password=$('#password').value,err=$('#err'),all=users();if(modalType==='register'){if(all.some(u=>u.email===email)){err.textContent='Bu e-posta bu cihazda kayıtlı. Giriş yapabilirsiniz.';return}let salt=crypto.randomUUID(),pw=await hash(password,salt),u={id:crypto.randomUUID(),name:$('#aname').value.trim(),email,salt,pw};all.push(u);save(all);localStorage.setItem(S,u.id);hideModal();enter(u)}else{let u=all.find(x=>x.email===email);if(!u||await hash(password,u.salt)!==u.pw){err.textContent='Bilgiler eşleşmedi. Bu deneme yalnızca aynı cihazda çalışır.';return}localStorage.setItem(S,u.id);hideModal();enter(u)}}
-function enter(u){$('#welcome').classList.add('hidden');$('#dash').classList.add('active');$('#firstName').textContent=u.name.split(' ')[0];$('#memberName').textContent=u.name;$('#memberId').textContent='Üye No: '+u.id.slice(0,8).toUpperCase();const box=$('#qrbox');box.innerHTML='';if(typeof QRCode!=='undefined'){new QRCode(box,{text:'FTMOTION-SADAKAT-TEST:'+u.id,width:170,height:170,colorDark:'#231914',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}else box.textContent='QR kütüphanesi yüklenemedi';window.scrollTo(0,0)}
-
+function togglePassword(){const x=$('#password'),b=$('#passwordToggle');if(!x||!b)return;const visible=x.type==='password';x.type=visible?'text':'password';b.textContent=visible?'🙈':'👁';b.setAttribute('aria-pressed',String(visible));b.setAttribute('aria-label',visible?'Şifreyi gizle':'Şifreyi göster')}
+async function api(path,method='GET',payload=null,token=null){
+ const headers={'apikey':SUPABASE_KEY,'Content-Type':'application/json'};
+ if(token)headers.Authorization='Bearer '+token;
+ const response=await fetch(SUPABASE_URL+path,{method,headers,body:payload===null?undefined:JSON.stringify(payload)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.msg||data.error_description||data.message||data.error||'İstek tamamlanamadı');
+ return data;
+}
+function saveSession(data){
+ if(!data?.access_token||!data?.refresh_token)return;
+ session={access_token:data.access_token,refresh_token:data.refresh_token,expires_at:Math.floor(Date.now()/1000)+(data.expires_in||3600)};
+ localStorage.setItem(SESSION_KEY,JSON.stringify(session));
+}
+async function ensureSession(){
+ if(!session){try{session=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{session=null}}
+ if(!session)return null;
+ if(session.expires_at>Date.now()/1000+90)return session;
+ try{saveSession(await api('/auth/v1/token?grant_type=refresh_token','POST',{refresh_token:session.refresh_token}));return session}
+ catch{session=null;localStorage.removeItem(SESSION_KEY);return null}
+}
+async function submitAuth(e){
+ e.preventDefault();
+ const btn=$('#authSubmit'),err=$('#err'),password=$('#password').value,mode=modalType;
+ btn.disabled=true;btn.textContent='İşleniyor...';err.textContent='';
+ try{
+  if(mode==='reset'){
+   if(!await ensureSession())throw Error('Bağlantının süresi doldu. Yeni şifre isteği gönder.');
+   await api('/auth/v1/user','PUT',{password},session.access_token);hideModal();history.replaceState(null,'',location.pathname);return;
+  }
+  const email=$('#email').value.trim().toLowerCase();
+  if(mode==='register'){
+   const full_name=$('#aname').value.trim();if(full_name.length<3)throw Error('Lütfen ad soyad yaz.');
+   const d=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(location.origin+location.pathname),'POST',{email,password,data:{full_name}});
+   if(d.access_token){saveSession(d);authUser=d.user;hideModal();enter(users()[0])}
+   else{err.style.color='#417e52';err.textContent='Kayıt isteğin alındı. Gelen kutunu ve spam klasörünü kontrol et. E-postandaki bağlantıyı onayladıktan sonra giriş yap.'}
+  }else{
+   const d=await api('/auth/v1/token?grant_type=password','POST',{email,password});saveSession(d);authUser=d.user;hideModal();enter(users()[0]);
+  }
+ }catch(ex){err.style.color='#af3430';err.textContent=/invalid login credentials/i.test(ex.message)?'E-posta veya şifre eşleşmiyor. Şifremi Unuttum seçeneğini kullanabilirsin.':/email not confirmed/i.test(ex.message)?'E-posta adresini doğrulayıp yeniden giriş yap.':ex.message}
+ finally{btn.disabled=false;btn.textContent=mode==='register'?'Üye Ol':mode==='reset'?'Şifreyi Kaydet':'Giriş Yap'}
+}
+async function forgotPassword(){
+ const email=$('#email')?.value?.trim(),err=$('#err');
+ if(!email){err.textContent='Önce e-posta adresini yaz.';return}
+ try{await api('/auth/v1/recover?redirect_to='+encodeURIComponent(location.origin+location.pathname),'POST',{email});err.style.color='#417e52';err.textContent='Adres kayıtlıysa şifre yenileme e-postası gönderilir.'}catch(ex){err.textContent=ex.message}
+}
+function enter(u){
+ if(!u)return;
+ $('#welcome').classList.add('hidden');$('#dash').classList.add('active');
+ $('#firstName').textContent=u.name.split(' ')[0];$('#memberName').textContent=u.name;
+ $('#memberId').textContent='Üye No: '+u.id.slice(0,8).toUpperCase();
+ const box=$('#qrbox');box.innerHTML='';
+ if(typeof QRCode!=='undefined')new QRCode(box,{text:'SADAKATQR:'+u.id,width:170,height:170,colorDark:'#231914',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+ else box.textContent='QR oluşturucu yüklenemedi';
+ window.scrollTo(0,0);
+}
+async function restoreAuth(){
+ const url=new URL(location.href);let token=url.searchParams.get('access_token'),refresh=url.searchParams.get('refresh_token'),type=url.searchParams.get('type');
+ const hash=new URLSearchParams(location.hash.slice(1));token=token||hash.get('access_token');refresh=refresh||hash.get('refresh_token');type=type||hash.get('type');
+ if(token&&refresh){saveSession({access_token:token,refresh_token:refresh,expires_in:Number(hash.get('expires_in')||3600)});history.replaceState(null,'',location.pathname);if(type==='recovery'){showModal('reset');return}}
+ const s=await ensureSession();if(!s)return;
+ try{authUser=await api('/auth/v1/user','GET',null,s.access_token);if(authUser?.id)enter(users()[0])}
+ catch{session=null;authUser=null;localStorage.removeItem(SESSION_KEY)}
+}
 function showMemberQR(){const qr=document.querySelector('#qrbox img, #qrbox canvas');if(!qr){showDemo();return}document.querySelector('#modalContent').innerHTML='<h2>Kişisel QR Kodum</h2><p>İşletmede bu QR kodunu göster.</p><div style="background:white;padding:18px;border-radius:17px;display:grid;place-items:center" id="largeQR"></div>';const copy=qr.cloneNode(true);if(qr.tagName==='CANVAS'){const image=new Image();image.src=qr.toDataURL();copy.replaceWith?.(image);document.querySelector('#largeQR').appendChild(image)}else document.querySelector('#largeQR').appendChild(copy);document.querySelector('#largeQR img')?.style.setProperty('width','230px');document.querySelector('#largeQR img')?.style.setProperty('height','230px');document.querySelector('#overlay').classList.add('show')}
 function showDemo(){document.querySelector('#modalContent').innerHTML='<h2>Test kampanyası</h2><p>Bu kart örnek amaçlı gösteriliyor. Gerçek damga ve ödül işlemleri işletme sistemi bağlandığında kullanılabilecek.</p><button class="primary" onclick="hideModal()">Tamam</button>';document.querySelector('#overlay').classList.add('show')}
 const demoOffers=[
@@ -161,9 +239,9 @@ function showLegal(type){
 }
 function renderAccount(){
 const root=document.getElementById('tabContent');root.style.display='block';root.style.background='transparent';root.style.padding='0';
-const u=users().find(x=>x.id===localStorage.getItem(S));
+const u=users()[0];
 const name=u?u.name:'Üye';const email=u?u.email:'';
-root.innerHTML='<h2 class="account-title">Hesabım</h2><p class="account-sub">Üyelik bilgilerin ve ayarların.</p><div class="account-person"><div class="account-avatar">👤</div><div><b id="accountName"></b><small id="accountEmail"></small></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">▦</div><div><strong>Kişisel QR Kodum</strong><small>Tüm anlaşmalı işletmeler için tek kod</small></div><button id="accountQr">Göster ›</button></div><div class="account-row"><div class="account-icon">✉</div><div><strong>E-posta</strong><small id="accountMail"></small></div></div><div class="account-row"><div class="account-icon">🔒</div><div><strong>Şifre ve güvenlik</strong><small>Şifre yenileme canlı üyelikte açılacak</small></div></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">ⓘ</div><div><strong>Nasıl Kullanılır?</strong><small>Sadakat Kartım hakkında kısa rehber</small></div><button id="accountHelp">Aç ›</button></div><div class="account-row"><div class="account-icon">🔔</div><div><strong>Bildirimler</strong><small>İzin ayarları canlı sistemde açılacak</small></div></div></div><button class="account-signout" id="accountLogout">↪ Hesaptan Çıkış Yap</button><div class="account-legal"><div class="account-legal-title">YASAL BİLGİLER</div><div class="account-legal-links"><button type="button" data-legal="kvkk">KVKK Aydınlatma</button><button type="button" data-legal="privacy">Gizlilik Politikası</button><button type="button" data-legal="terms">Kullanım Koşulları</button><button type="button" data-legal="cookies">Çerez Politikası</button></div></div><p class="account-hint">Geliştirme sürümü · Üyelik yalnızca bu tarayıcıda saklanır.</p>';
+root.innerHTML='<h2 class="account-title">Hesabım</h2><p class="account-sub">Üyelik bilgilerin ve ayarların.</p><div class="account-person"><div class="account-avatar">👤</div><div><b id="accountName"></b><small id="accountEmail"></small></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">▦</div><div><strong>Kişisel QR Kodum</strong><small>Tüm anlaşmalı işletmeler için tek kod</small></div><button id="accountQr">Göster ›</button></div><div class="account-row"><div class="account-icon">✉</div><div><strong>E-posta</strong><small id="accountMail"></small></div></div><div class="account-row"><div class="account-icon">🔒</div><div><strong>Şifre ve güvenlik</strong><small>Şifre yenileme canlı üyelikte açılacak</small></div></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">ⓘ</div><div><strong>Nasıl Kullanılır?</strong><small>Sadakat Kartım hakkında kısa rehber</small></div><button id="accountHelp">Aç ›</button></div><div class="account-row"><div class="account-icon">🔔</div><div><strong>Bildirimler</strong><small>İzin ayarları canlı sistemde açılacak</small></div></div></div><button class="account-signout" id="accountLogout">↪ Hesaptan Çıkış Yap</button><div class="account-legal"><div class="account-legal-title">YASAL BİLGİLER</div><div class="account-legal-links"><button type="button" data-legal="kvkk">KVKK Aydınlatma</button><button type="button" data-legal="privacy">Gizlilik Politikası</button><button type="button" data-legal="terms">Kullanım Koşulları</button><button type="button" data-legal="cookies">Çerez Politikası</button></div></div><p class="account-hint">Geliştirme sürümü · Üyelik bağımsız Supabase sisteminde yönetilir.</p>';
 root.querySelector('#accountName').textContent=name;
 root.querySelector('#accountEmail').textContent=email;
 root.querySelector('#accountMail').textContent=email;
@@ -218,6 +296,6 @@ function switchTab(t){
  requestAnimationFrame(()=>{const target=document.getElementById('tabContent');const y=target.getBoundingClientRect().top+window.scrollY-14;window.scrollTo({top:Math.max(0,y),behavior:'smooth'});});
 }
 document.querySelectorAll('.bottom button[data-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
-function logout(){document.getElementById('dash').classList.remove('subpage');localStorage.removeItem(S);$('#dash').classList.remove('active');$('#welcome').classList.remove('hidden');window.scrollTo(0,0)}
-const existing=users().find(u=>u.id===localStorage.getItem(S));if(existing)enter(existing);
+function logout(){document.getElementById('dash').classList.remove('subpage');if(session)api('/auth/v1/logout','POST',null,session.access_token).catch(()=>{});localStorage.removeItem(SESSION_KEY);session=null;authUser=null;$('#dash').classList.remove('active');$('#welcome').classList.remove('hidden');window.scrollTo(0,0)}
+restoreAuth();
 </script></body></html>
