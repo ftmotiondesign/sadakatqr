@@ -169,13 +169,13 @@ async function submitAuth(e){
   }else{
    const d=await api('/auth/v1/token?grant_type=password','POST',{email,password});saveSession(d);authUser=d.user;hideModal();enter(users()[0]);
   }
- }catch(ex){err.style.color='#af3430';err.textContent=/invalid login credentials/i.test(ex.message)?'E-posta veya şifre eşleşmiyor. Şifremi Unuttum seçeneğini kullanabilirsin.':/email not confirmed/i.test(ex.message)?'E-posta adresini doğrulayıp yeniden giriş yap.':ex.message}
+ }catch(ex){err.style.color='#af3430';err.textContent=/invalid login credentials/i.test(ex.message)?'E-posta veya şifre eşleşmiyor. Şifremi Unuttum seçeneğini kullanabilirsin.':/email not confirmed/i.test(ex.message)?'E-posta adresini doğrulayıp yeniden giriş yap.':/email rate limit exceeded|over_email_send_rate_limit/i.test(ex.message)?'E-posta gönderim sınırına ulaşıldı. Lütfen peş peşe tekrar deneme; özel e-posta servisi bağlanana veya kota yenilenene kadar yeni e-posta gönderilemez.':ex.message}
  finally{authBusy=false;btn.disabled=false;btn.textContent=mode==='register'?'Üye Ol':mode==='reset'?'Şifreyi Kaydet':'Giriş Yap'}
 }
 async function forgotPassword(){
  const email=$('#email')?.value?.trim(),err=$('#err');
  if(!email){err.textContent='Önce e-posta adresini yaz.';return}
- try{await api('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_URL),'POST',{email});err.style.color='#417e52';err.textContent='Adres kayıtlıysa şifre yenileme e-postası gönderilir.'}catch(ex){err.textContent=ex.message}
+ try{await api('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_URL),'POST',{email});err.style.color='#417e52';err.textContent='Adres kayıtlıysa şifre yenileme e-postası gönderilir.'}catch(ex){err.textContent=/email rate limit exceeded|over_email_send_rate_limit/i.test(ex.message)?'E-posta gönderim sınırına ulaşıldı. Tekrar tekrar denemeyin; gönderim kotası yenilenmeli veya özel SMTP bağlanmalı.':ex.message}
 }
 function enter(u){
  if(!u)return;
