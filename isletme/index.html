@@ -17,7 +17,7 @@ const cards=[['scan','📷','QR Okut','Müşterinin kodunu tara'],['stamp','⭐'
 const featureRoot=document.getElementById('features'),overlay=document.getElementById('featureDialog'),dialogTitle=document.getElementById('dialogTitle'),dialogBody=document.getElementById('dialogBody');let previousFocus=null;
 featureRoot.innerHTML=cards.map(c=>'<button class="tile" type="button" data-page="'+c[0]+'"><span class="emoji">'+c[1]+'</span><strong>'+c[2]+'</strong><small>'+c[3]+'</small><span class="tile-open">Aç ›</span></button>').join('');
 const panels={
-join:{title:'🤝 Kampanyaya Katılım Onayı',body:'<p>Müşteri işletme QR kodundan kampanyayı seçer ve kendi QR kodunu veya altı haneli numarasını gösterir. Katılım yalnızca onayınızdan sonra gerçekleşir.</p><form id="joinForm" class="action-box"><label>Kampanya</label><select id="joinCampaign" required><option value="">Yükleniyor…</option></select><label>Müşteri QR kodu veya 6 haneli numara</label><input id="joinCustomerCode" required placeholder="SADAKATQR:... veya 123456" autocomplete="off"><button class="button" id="joinSubmit" type="submit">✓ Katılımı Onayla</button><p id="joinMessage" role="status"></p></form>'},
+join:{title:'🤝 Katılım Talepleri',body:'<p>Müşteriler QR üzerinden Katıl dediğinde burada görünür. Kod istemeye gerek yoktur.</p><button class="button" type="button" id="refreshJoinRequests">↻ Talepleri Yenile</button><div id="joinRequests" class="action-box" aria-live="polite">Yükleniyor…</div>'},
 scan:{title:'📷 QR Okut',body:'<p>Müşterinin SadakatQR kodunu kamerayla okut veya kodu elle gir.</p><div class="action-box"><div class="scanner-wrap login-hidden" id="scannerWrap"><video id="scannerVideo" autoplay muted playsinline></video><span class="scan-frame"></span></div><button type="button" class="button" id="cameraToggle">📷 Kamerayı Başlat</button><label for="memberCode">Müşteri QR veya 6 Haneli Numara</label><input id="memberCode" placeholder="Örn. 482156 veya QR kodu" autocomplete="off" spellcheck="false"><button class="button" type="button" id="checkMember">Kodu Elle Kontrol Et</button><div class="scan-result" id="scanResult" aria-live="polite">Henüz müşteri kodu okunmadı.</div><p class="muted">QR okutulunca veya kod elle yazılınca biçim otomatik kontrol edilir. Gerçek üye doğrulaması henüz bağlı değildir.</p></div>'},
 stamp:{title:'⭐ Damga Ver',body:'<p>Müşterinin SadakatQR kodunu gir ve aktif kampanyayı seç. Damga verme işlemi işletme hesabınla doğrulanır.</p><form id="stampForm" class="action-box"><label for="stampCustomerCode">Müşteri QR veya 6 Haneli Numara</label><input id="stampCustomerCode" placeholder="Örn. 482156 veya QR kodu" required autocomplete="off" spellcheck="false"><label for="stampCampaign">Aktif kampanya</label><select id="stampCampaign" required><option value="">Yükleniyor…</option></select><button id="stampSubmit" class="button" type="submit" disabled>1 Damga Ver</button><div id="stampFeedback" class="scan-result" role="status" aria-live="polite">Kampanyalar yükleniyor…</div></form>'},
 reward:{title:'🎁 Ödül Onayla',body:'<p>Müşterinin kodunu gir, aktif kampanyayı seç ve hak edilen ödülü kontrol et.</p><form id="rewardForm" class="action-box"><label for="rewardCustomer">Müşteri QR veya 6 Haneli Numara</label><input id="rewardCustomer" placeholder="Örn. 482156 veya QR kodu" required autocomplete="off"><label for="rewardCampaign">Kampanya</label><select id="rewardCampaign" required><option value="">Yükleniyor…</option></select><button class="button" type="submit" id="rewardCheck">Ödül Hakkını Kontrol Et</button><div class="scan-result" id="rewardFeedback" role="status" aria-live="polite"></div><button class="button" type="button" id="rewardDeliver" disabled>Ödülü Teslim Et</button></form>'},
@@ -34,16 +34,32 @@ function openFeature(page){const p=panels[page];if(!p)return;previousFocus=docum
 
 
 async function initJoinPanel(){
- const select=document.getElementById('joinCampaign'),form=document.getElementById('joinForm'),message=document.getElementById('joinMessage');
- if(!form||!select)return;
- if(!currentBusiness||currentBusiness.status!=='approved'){message.textContent='Önce işletme hesabı onaylanmalı.';form.querySelector('button').disabled=true;return;}
- try{const rows=await request('/rest/v1/loyalty_campaigns?select=id,name&business_id=eq.'+encodeURIComponent(currentBusiness.id)+'&active=eq.true','GET',null,tokens.access_token);
- select.replaceChildren(new Option('Kampanya seçin',''));for(const c of rows)select.add(new Option(c.name,c.id));
- const preselected=new URL(location.href).searchParams.get('kampanya');if(preselected&&rows.some(c=>c.id===preselected))select.value=preselected;
- }catch(e){message.textContent='Kampanyalar yüklenemedi: '+e.message}
- form.onsubmit=async e=>{e.preventDefault();const button=document.getElementById('joinSubmit');button.disabled=true;message.textContent='Katılım doğrulanıyor…';
- try{const result=await request('/rest/v1/rpc/loyalty_approve_enrollment','POST',{p_campaign_id:select.value,p_customer_code:document.getElementById('joinCustomerCode').value.trim()},tokens.access_token);message.textContent='✓ '+result;}
- catch(err){message.textContent='Katılım onaylanamadı: '+err.message}finally{button.disabled=false}};
+ const area=document.getElementById('joinRequests');if(!area)return;
+ if(!currentBusiness||currentBusiness.status!=='approved'){area.textContent='İşletme onayı gerekiyor.';return;}
+ const refresh=async()=>{
+ area.textContent='Katılım talepleri yükleniyor…';
+ try{
+ const rows=await request('/rest/v1/rpc/loyalty_business_join_requests','POST',{},tokens.access_token);
+ area.replaceChildren();
+ if(!Array.isArray(rows)||!rows.length){area.textContent='Henüz katılım talebi yok.';return;}
+ for(const item of rows){
+ const card=document.createElement('article');card.className='card';
+ const title=document.createElement('strong');title.textContent=(item.customer_name||'Müşteri')+' · '+item.campaign_name;
+ const detail=document.createElement('small');detail.textContent='Durum: '+(item.status==='pending'?'Onay bekliyor':item.status==='approved'?'Onaylandı':'Reddedildi')+' · '+new Date(item.requested_at).toLocaleString('tr-TR');
+ card.append(title,detail);
+ if(item.status==='pending'){
+ for(const approved of [true,false]){
+ const button=document.createElement('button');button.type='button';button.className='button';button.textContent=approved?'✓ Katılımı Onayla':'Reddet';
+ button.onclick=async()=>{button.disabled=true;try{await request('/rest/v1/rpc/loyalty_decide_join','POST',{p_request_id:item.request_id,p_approve:approved},tokens.access_token);await refresh()}catch(e){alert('İşlem başarısız: '+e.message);button.disabled=false}};
+ card.append(button);
+ }
+ }
+ area.append(card);
+ }
+ }catch(e){area.textContent='Talepler yüklenemedi: '+e.message;}
+ };
+ document.getElementById('refreshJoinRequests').onclick=refresh;
+ await refresh();
 }
 
 let customerInsightRows=[];
