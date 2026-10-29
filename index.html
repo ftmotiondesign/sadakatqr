@@ -362,7 +362,7 @@ async function openBusinessScanner(){
    try{const codes=await detector.detect(video);if(codes.length){
     const dest=scannedBusinessUrl(codes[0].rawValue);
     if(dest){stopBusinessScanner();location.assign(dest)}
-    else status.textContent='Bu QR, SadakatQR işletme bağlantısı değil.';
+    else {status.textContent='QR okundu ancak SadakatQR işletme bağlantısı olarak tanınmadı.';const detail=document.createElement('div');detail.className='scan-note';detail.style.cssText='overflow-wrap:anywhere;margin-top:10px;padding:10px;background:#fff;border-radius:10px';const value=String(codes[0].rawValue||'');let safe=value;try{const parsed=new URL(value);safe=parsed.origin+parsed.pathname+' (parametreler: '+[...parsed.searchParams.keys()].join(', ')+')'}catch{}detail.textContent='Okunan içerik: '+safe.slice(0,350);status.replaceChildren(document.createTextNode('QR okundu ancak SadakatQR işletme bağlantısı olarak tanınmadı.'),detail);stopBusinessScanner();}
    }}catch{}finally{qrScanBusy=false}
   },400);
  }catch(e){stopBusinessScanner();status.textContent='Kamera açılamadı. Tarayıcı kamera iznini kontrol et.'}
