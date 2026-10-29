@@ -315,8 +315,22 @@ async function showReceivedGifts(){
  const sess=await ensureSession();if(!sess?.access_token)throw Error('Tekrar giriş yapmalısın');
  const rows=await api('/rest/v1/rpc/loyalty_my_gift_history','POST',{},sess.access_token);
  if(!target.isConnected)return;
- target.innerHTML=rows.length?rows.map((r,i)=>'<article style="background:#fff8f1;border:1px solid #eadacb;border-radius:13px;padding:14px;margin:9px 0"><small>Hediye #'+(rows.length-i)+'</small><div><strong>'+safeLoyaltyText(r.business_name)+'</strong></div><p>'+safeLoyaltyText(r.campaign_name)+'</p><small>Alınma tarihi: '+new Date(r.received_at).toLocaleString('tr-TR')+'</small><div style="color:#16844c;font-weight:750;margin-top:8px">✓ Teslim edildi</div></article>').join(''):'Henüz teslim edilmiş hediyen bulunmuyor.';
+ target.innerHTML=rows.length?rows.map((r,i)=>'<article style="background:#fff8f1;border:1px solid #eadacb;border-radius:13px;padding:14px;margin:9px 0"><small>Hediye #'+(rows.length-i)+'</small><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><strong>'+safeLoyaltyText(r.business_name)+'</strong><button type="button" data-gift-offers="'+safeLoyaltyText(r.gift_id)+'" style="border:0;background:#e5f5ea;color:#176c3c;border-radius:9px;padding:6px 9px;font-size:12px;font-weight:750">Yeni fırsatlara bak ›</button></div><p>'+safeLoyaltyText(r.campaign_name)+'</p><small>Alınma tarihi: '+new Date(r.received_at).toLocaleString('tr-TR')+'</small><div style="color:#16844c;font-weight:750;margin-top:8px">✓ Teslim edildi</div></article>').join(''):'Henüz teslim edilmiş hediyen bulunmuyor.';
+ target.querySelectorAll('[data-gift-offers]').forEach(btn=>btn.addEventListener('click',()=>showGiftOffers(btn.dataset.giftOffers)));
  }catch(e){if(target.isConnected)target.textContent='Hediye kayıtları yüklenemedi: '+e.message}
+}
+async function showGiftOffers(giftId){
+ const modal=document.getElementById('modalContent');
+ if(!modal)return;
+ modal.innerHTML='<h2>İşletmenin Yeni Fırsatları</h2><button type="button" id="backGifts" class="secondary">‹ Aldığım Hediyeler</button><p style="font-size:12px;color:#806d63">Bu alanda yalnızca yayını onaylanmış sponsorlu kampanyalar gösterilir.</p><div id="sponsoredGiftOffers" style="max-height:65dvh;overflow-y:auto">Yükleniyor…</div>';
+ modal.querySelector('#backGifts').addEventListener('click',showReceivedGifts);
+ const target=modal.querySelector('#sponsoredGiftOffers');
+ try{
+ const sess=await ensureSession();if(!sess?.access_token)throw Error('Tekrar giriş yapmalısın');
+ const rows=await api('/rest/v1/rpc/loyalty_sponsored_offers_for_gift','POST',{p_gift_id:giftId},sess.access_token);
+ if(!target.isConnected)return;
+ target.innerHTML=rows.length?rows.map(r=>'<article style="border:1px solid #e5d6c9;border-radius:13px;padding:14px;margin:9px 0"><small style="color:#93603d">Sponsorlu</small><h3 style="font-size:16px;margin:7px 0">'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+safeLoyaltyText(r.business_name)+'</p><small>Hediye için '+Number(r.stamps_required)+' damga gerekli</small></article>').join(''):'Bu işletmenin şu anda yayınlanan sponsorlu kampanyası bulunmuyor.';
+ }catch(err){if(target.isConnected)target.textContent='Kampanyalar yüklenemedi: '+err.message}
 }
 function renderAccount(){
 const root=document.getElementById('tabContent');root.style.display='block';root.style.background='transparent';root.style.padding='0';
