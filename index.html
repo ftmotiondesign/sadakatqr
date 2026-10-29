@@ -356,7 +356,7 @@ function renderFavorites(){
  root.innerHTML='<div class="fav-head"><h2>Favori / Tavsiye ♡</h2><p>Sevdiğin işletmeleri sakla, arkadaşlarına öner.</p></div><div class="fav-points"><div><small>Tavsiye Puanlarım</small><strong id="referralPoints">—</strong></div><div><small>Ödüllenen Tavsiye</small><strong id="referralConfirmed">—</strong></div></div><p class="fav-note">Davet ettiğin kişi ilk doğrulanmış alışverişini yaptığında 10 puan kazanırsın.</p><div class="fav-top"><span>Favori İşletmelerim</span><b id="favCount">0</b></div><div id="favList"></div><button type="button" class="fav-discover" id="favDiscover">Yeni Fırsatlar Keşfet ›</button>';
  const names=favoriteNames(),list=root.querySelector('#favList');root.querySelector('#favCount').textContent=String(names.length);
  if(!names.length){list.innerHTML='<div class="cards-empty"><div class="pic">♡</div><h3>Henüz favori işletmen yok</h3><p>Fırsatlar bölümünde bir işletmeyi ♡ ile kaydet. Sonra burada kolayca bulabilir ve tavsiye edebilirsin.</p></div>'}
- for(const name of names){const card=document.createElement('article');card.className='fav-card';const body=document.createElement('div');body.className='fav-name';const title=document.createElement('strong');title.textContent=name;const caption=document.createElement('small');caption.textContent='Favori işletmen';body.append(title,caption);const share=document.createElement('button');share.textContent='Tavsiye Et';share.onclick=()=>recommendFavorite(name);const remove=document.createElement('button');remove.textContent='♡ Kaldır';remove.onclick=()=>saveFavorite(name);card.append(body,share,remove);list.append(card)}
+ for(const name of names){const card=document.createElement('article');card.className='fav-card';const body=document.createElement('div');body.className='fav-name';const title=document.createElement('strong');title.textContent=name;const caption=document.createElement('small');caption.textContent='Favori işletmen';body.append(title,caption);const share=document.createElement('button');share.textContent='Tavsiye Et';share.onclick=()=>recommendFavorite(name);const remove=document.createElement('button');remove.textContent='Favoriden Çıkar';remove.onclick=()=>saveFavorite(name);card.append(body,share,remove);list.append(card)}
  root.querySelector('#favDiscover').onclick=()=>switchTab('firsatlar');loadReferralStats();
 }
 function renderOffers(){
@@ -398,7 +398,7 @@ async function loadLiveSponsoredOffers(){
   updateLiveDistricts();drawLiveOffers();
  }catch(e){home.textContent='Kampanyalar yüklenemedi. Fırsatlar veritabanı bağlantısını kontrol edin.';const other=document.getElementById('liveSponsoredOffers');if(other)other.textContent=''}
 }
-document.addEventListener('click',e=>{const btn=e.target.closest('[data-fav-business]');if(!btn)return;e.preventDefault();const name=btn.dataset.favBusiness;const added=saveFavorite(name);if(added!==null&&btn.isConnected)btn.textContent=added?'♥ Favorilerimde':'♡ Favoriye Ekle';});
+document.addEventListener('click',e=>{const btn=e.target.closest('[data-fav-business]');if(!btn)return;e.preventDefault();const name=btn.dataset.favBusiness;const added=saveFavorite(name);if(added!==null&&btn.isConnected)btn.textContent=added?'✓ Eklendi':'♡ Favoriye Ekle';});
 function drawOffers(){
  const filters=document.getElementById('offerFilters'),grid=document.getElementById('offersGrid');if(!filters||!grid)return;
  const cats=['Tümü','Kafe','Pastane','Restoran'];
