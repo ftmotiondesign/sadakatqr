@@ -9,7 +9,7 @@ begin
  end if;
  return query
  select u.id,
- coalesce(nullif(cp.full_name,''),nullif(u.raw_user_meta_data->>'full_name',''),nullif(u.raw_user_meta_data->>'name',''))::text,
+ coalesce(nullif(u.raw_user_meta_data->>'full_name',''),nullif(u.raw_user_meta_data->>'name',''))::text,
  u.email::text,u.created_at,u.last_sign_in_at,
  (select count(*) from public.loyalty_stamps s where s.customer_user_id=u.id),
  (select count(*) from public.loyalty_redemptions r where r.customer_user_id=u.id),
@@ -20,8 +20,7 @@ begin
       else 'Müşteri' end::text
  from auth.users u
  left join public.loyalty_short_codes sc on sc.user_id=u.id
- left join public.customer_profiles cp on cp.user_id=u.id
- where sc.short_code is not null or cp.user_id is not null
+ where sc.short_code is not null
  or (not exists(select 1 from public.loyalty_businesses b where b.owner_user_id=u.id)
  and not exists(select 1 from public.loyalty_admins a where a.user_id=u.id))
  order by u.created_at desc limit 2000;
