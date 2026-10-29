@@ -336,13 +336,15 @@ function stopBusinessScanner(){
  qrScanBusy=false;
 }
 function scannedBusinessUrl(raw){
- let u;try{u=new URL(raw,location.origin)}catch{return null}
- if(!/^https?:$/.test(u.protocol))return null;
- const allowed=[location.hostname,'ftmotiondesign.github.io','sadakatqr.com'];
- if(!allowed.includes(u.hostname))return null;
- if(u.hostname==='ftmotiondesign.github.io'&&!u.pathname.startsWith('/sadakatqr/'))return null;
- if(!(/\/kampanya\//.test(u.pathname)||/\/isletme\//.test(u.pathname)||u.searchParams.has('kampanya')||u.searchParams.has('business')||u.searchParams.has('isletme')))return null;
- return u.href;
+ let u;try{u=new URL(String(raw).trim())}catch{return null}
+ if(u.protocol!=='https:')return null;
+ if(u.hostname==='ftmotion.com'||u.hostname==='www.ftmotion.com'){
+  return /^\/qr\/[a-z0-9][a-z0-9-]*\/?$/i.test(u.pathname)?u.href:null;
+ }
+ if(u.hostname!=='ftmotiondesign.github.io'||!u.pathname.startsWith('/sadakatqr/'))return null;
+ if(/\/kampanya\//.test(u.pathname)&&u.searchParams.has('isletme'))return u.href;
+ if(u.searchParams.has('kampanya')||u.searchParams.has('isletme'))return u.href;
+ return null;
 }
 async function openBusinessScanner(){
  stopBusinessScanner();
