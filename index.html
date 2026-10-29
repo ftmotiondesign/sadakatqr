@@ -341,7 +341,7 @@ function scannedBusinessUrl(raw){
  const allowed=[location.hostname,'ftmotiondesign.github.io','sadakatqr.com'];
  if(!allowed.includes(u.hostname))return null;
  if(u.hostname==='ftmotiondesign.github.io'&&!u.pathname.startsWith('/sadakatqr/'))return null;
- if(!(/\/kampanya\//.test(u.pathname)||/\/isletme\//.test(u.pathname)||u.searchParams.has('kampanya')||u.searchParams.has('business')))return null;
+ if(!(/\/kampanya\//.test(u.pathname)||/\/isletme\//.test(u.pathname)||u.searchParams.has('kampanya')||u.searchParams.has('business')||u.searchParams.has('isletme')))return null;
  return u.href;
 }
 async function openBusinessScanner(){
