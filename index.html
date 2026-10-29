@@ -317,9 +317,22 @@ const demoOffers=[
 let offerCategory='Tümü',offerSearch='';
 function renderOffers(){
  const root=document.getElementById('tabContent');root.style.display='block';root.style.background='transparent';root.style.padding='0';
- root.innerHTML='<h2 class="offers-title">Fırsatlar ✨</h2><p class="offers-sub">Sevdiğin işletmelerin fırsatlarını keşfet.</p><input class="offers-search" id="offerSearch" type="search" placeholder="İşletme veya fırsat ara..." aria-label="Fırsat ara"><div class="offers-filters" id="offerFilters"></div><div class="offers-grid" id="offersGrid"></div><p class="reward-note">Şimdilik örnek fırsatlar gösteriliyor.</p>';
+ root.innerHTML='<h2 class="offers-title">Fırsatlar ✨</h2><p class="offers-sub">Sevdiğin işletmelerin fırsatlarını keşfet.</p><input class="offers-search" id="offerSearch" type="search" placeholder="İşletme veya fırsat ara..." aria-label="Fırsat ara"><h3 style="margin:16px 0 8px">Sponsorlu Fırsatlar</h3><div id="liveSponsoredOffers" aria-live="polite">Yükleniyor…</div><h3 style="margin:17px 0 8px">Örnek Fırsatlar</h3><div class="offers-filters" id="offerFilters"></div><div class="offers-grid" id="offersGrid"></div><p class="reward-note">Şimdilik örnek fırsatlar gösteriliyor.</p>';
  const input=root.querySelector('#offerSearch');input.value=offerSearch;input.addEventListener('input',e=>{offerSearch=e.target.value;drawOffers()});
- drawOffers();
+ drawOffers();loadLiveSponsoredOffers();
+}
+async function loadLiveSponsoredOffers(){
+ const box=document.getElementById('liveSponsoredOffers');if(!box)return;
+ try{
+  const result=await api('/rest/v1/rpc/loyalty_public_sponsored_offers','POST',{p_placement:'offers'});
+  if(!box.isConnected)return;
+  box.innerHTML=result.length?result.map(r=>'<article class="offer-card" style="margin:8px 0;padding:15px;border:1px solid #ead8c7;border-radius:14px"><div class="offer-info"><small style="color:#995422">Sponsorlu · '+safeLoyaltyText(r.business_name)+'</small><h3>'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+Number(r.stamps_required)+' damga ile ödül fırsatı</p><button type="button" data-sponsored-campaign="'+safeLoyaltyText(r.campaign_id)+'">Detayları Gör ›</button></div></article>').join(''):'<p class="offers-empty">Şu anda sponsorlu fırsat bulunmuyor.</p>';
+  box.querySelectorAll('[data-sponsored-campaign]').forEach(btn=>btn.addEventListener('click',()=>{
+   const r=result.find(x=>x.campaign_id===btn.dataset.sponsoredCampaign);if(!r)return;
+   document.getElementById('modalContent').innerHTML='<h2>'+safeLoyaltyText(r.business_name)+'</h2><h3>'+safeLoyaltyText(r.campaign_name)+'</h3><p>Ödül için '+Number(r.stamps_required)+' damga gerekli.</p><small>Sponsorlu kampanya</small>';
+   document.getElementById('overlay').classList.add('show');
+  }));
+ }catch(e){if(box.isConnected)box.textContent='Sponsorlu fırsatlar şu anda yüklenemedi.'}
 }
 function drawOffers(){
  const filters=document.getElementById('offerFilters'),grid=document.getElementById('offersGrid');if(!filters||!grid)return;
