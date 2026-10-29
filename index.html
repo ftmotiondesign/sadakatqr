@@ -261,16 +261,21 @@ async function loadRealLoyalty(expectedId){
 // Kampanya QR'ından gelen ziyaretçi giriş yaptıktan sonra kendi kodunu işletmeye gösterir.
 // Katılım, yalnızca işletme yetkilisi onay verdiğinde kaydedilir.
 async function showCampaignJoinHandoff(){
- const params=new URLSearchParams(location.search),campaign=params.get('kampanya'),business=params.get('isletme');
+ const p=new URLSearchParams(location.search),campaign=p.get('kampanya'),business=p.get('isletme');
  if(!campaign||!business||!authUser?.id)return;
  if(!/^[0-9a-f-]{36}$/i.test(campaign)||!/^[0-9a-f-]{36}$/i.test(business))return;
  const modal=document.getElementById('modalContent');if(!modal)return;
- modal.innerHTML='<h2>Kampanyaya Katılım</h2><p>İşletme kampanyasına katılmak için müşteri QR kodunuzu veya numaranızı kasadaki görevliye gösterin. <b>Katılım, işletme onayladıktan sonra gerçekleşir.</b></p><div id="handoffQR" style="display:grid;place-items:center;padding:14px;background:white;border-radius:16px"></div><p style="text-align:center;font-weight:750" id="handoffNumber">Müşteri numarası yükleniyor…</p><button class="primary" type="button" onclick="hideModal()">Tamam</button>';
- const root=document.getElementById('handoffQR');
- if(typeof QRCode!=='undefined')new QRCode(root,{text:'SADAKATQR:'+authUser.id,width:212,height:212,colorDark:'#231914',colorLight:'#fff'});
- try{const token=(await ensureSession())?.access_token;if(token){const number=await api('/rest/v1/rpc/loyalty_my_short_code','POST',{},token);if(authUser?.id)document.getElementById('handoffNumber').textContent='Müşteri Numaram: '+number}}
- catch(e){document.getElementById('handoffNumber').textContent='QR kodunuzu işletmeye gösterin'}
+ modal.innerHTML='<h2>Kampanyaya Katıl</h2><p>Kampanyaya katılma isteğiniz doğrudan işletmeye iletilecek. QR kodu veya müşteri numarası vermeniz gerekmez. İşletme uygun gördüğünde damga verebilir.</p><button type="button" class="primary" id="sendJoinRequest">Kampanyaya Katıl</button><p id="joinRequestMessage" role="status"></p>';
  document.getElementById('overlay').classList.add('show');
+ document.getElementById('sendJoinRequest').onclick=async()=>{
+ const button=document.getElementById('sendJoinRequest'),message=document.getElementById('joinRequestMessage');
+ button.disabled=true;message.textContent='Talebiniz işletmeye gönderiliyor…';
+ try{const token=(await ensureSession())?.access_token;if(!token)throw Error('Tekrar giriş yapın');
+ const result=await api('/rest/v1/rpc/loyalty_request_join','POST',{p_campaign_id:campaign},token);
+ message.textContent=(typeof result==='string'?result:'Talebiniz alındı')+'. İşletmenin değerlendirmesini bekleyebilirsiniz.';
+ button.textContent='Talep Gönderildi';await loadMyEnrollments();
+ }catch(e){message.textContent='Talep gönderilemedi: '+e.message;button.disabled=false;}
+ };
 }
 async function loadMyEnrollments(){
  if(!authUser?.id)return;
