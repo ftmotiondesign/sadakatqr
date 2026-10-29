@@ -138,6 +138,7 @@ body:has(.welcome:not(.hidden)){overflow:hidden}
 .stat.member-stat .loyalty-stat-card:active{transform:scale(.97)}.stat.member-stat .loyalty-stat-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 @media(max-width:370px){.stat.member-stat{gap:7px}.stat.member-stat .loyalty-stat-card{padding:12px 3px;min-height:151px;border-radius:15px}.stat.member-stat .stat-icon-wrap{width:38px;height:38px;min-height:38px}.stat.member-stat .stat-more{padding:5px 6px}}
 @media(prefers-reduced-motion:reduce){.stat.member-stat .loyalty-stat-card{transition:none}}
+.wallet-head h2{font-size:25px;margin:0}.wallet-head p{font-size:13px;color:#917568}.wallet-member{display:flex;justify-content:space-between;align-items:center;gap:9px;background:#3c271e;color:#fff;border-radius:14px;padding:15px;margin:15px 0}.wallet-member button{border:0;background:#f5bc8b;color:#3c271e;border-radius:9px;padding:10px;font-weight:800}.wallet-card{background:#fff;border:1px solid #ead5c6;border-radius:15px;padding:17px;margin:12px 0}.wallet-card h3{margin:0 0 5px}.wallet-card p{font-size:13px;color:#8e7464}.wallet-card strong{display:block;font-size:13px;margin:12px 0}.wallet-bar{height:10px;background:#f1e4d8;border-radius:15px;overflow:hidden}.wallet-bar i{display:block;height:100%;background:#e77a43;border-radius:15px}.wallet-card button{margin-top:13px;border:0;border-radius:9px;background:#fff0e3;color:#925431;font-weight:800;padding:10px}
 </style></head><body><main class="app"><section id="welcome" class="welcome"><header class="head"><div class="brand brand-logo"><img src="./assets/sadakatqr-icon.svg" alt="" aria-hidden="true"><span>Sadakat<b>QR</b></span></div><div class="welcome-head-actions"><button class="help" onclick="showModal('how')">ⓘ Nasıl Kullanılır?</button><div class="menu-prompt"><span class="menu-hint" aria-hidden="true"><span class="typewriter">Üye Ol</span><img class="hint-arrow-gif" src="./assets/menu-arrow-animated.svg" alt="" width="58" height="22"></span><button class="menu-toggle" id="welcomeMenuToggle" type="button" aria-label="Giriş seçeneklerini aç" aria-expanded="false" aria-controls="welcomeMenu">☰</button></div></div></header><nav class="welcome-menu" id="welcomeMenu" hidden><button type="button" onclick="showModal('register');closeWelcomeMenu()">Ücretsiz Üye Ol</button><button type="button" onclick="showModal('login');closeWelcomeMenu()">Zaten Üyeyim · Giriş Yap</button><a href="./isletme/">İşletme Girişi</a></nav><h1>Alışveriş yap.<br><em>Biriktir, kazan!</em></h1><p>Sevdiğin işletmelerde ziyaretlerin hediyeye dönüşsün.</p><div class="hero"><div class="copy">Tek QR ile<br>daha çok ödül ✨</div><div class="mock"><div><div class="qrmini">▦</div>Sadakat Kartım<br>QR Kartım</div></div></div><div class="steps"><div class="step"><i>▦</i><strong>Tek QR</strong><small>Kolay katılım</small></div><div class="step"><i>☕</i><strong>Damga Biriktir</strong><small>Ziyaret ettikçe</small></div><div class="step"><i>🎁</i><strong>Hediyeni Al</strong><small>Ödülünü kazan</small></div></div><p class="notice">GELİŞTİRME SÜRÜMÜ · Gerçek e-posta üyeliği testi</p></section>
 <section id="dash" class="dash"><div class="dash-top"><header class="head"><div class="brand brand-logo"><img src="./assets/sadakatqr-icon.svg" alt="" aria-hidden="true"><span>Sadakat<b>QR</b></span></div><button class="help" onclick="logout()">Çıkış Yap</button></header><h1>Merhaba <em id="firstName"></em> 👋</h1><p>Bugün yeni fırsatlar seni bekliyor.</p></div>
 <div class="dash-body">
@@ -438,15 +439,57 @@ root.querySelector('#accountHelp').addEventListener('click',()=>showModal('how')
 root.querySelector('#accountLogout').addEventListener('click',logout);
 root.querySelectorAll('[data-legal]').forEach(b=>b.addEventListener('click',()=>showLegal(b.dataset.legal)));
 }
-function renderCards(tab='mine'){
-const root=document.getElementById('tabContent');if(!root)return;
-root.style.display='block';root.style.background='transparent';root.style.padding='0';
-const btns=[['mine','Kartlarım'],['example','Örnek Kartlar']].map(x=>'<button data-cardtab="'+x[0]+'" class="'+(tab===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
-let body=tab==='mine'?'<div class="cards-empty"><div class="pic">▦</div><h3>Henüz işletme kartın yok</h3><p>İşletmenin kampanya QR kodunu okutup katıldığında sadakat kartın burada görünecek.</p></div><button class="primary" id="cardQRshow">Kişisel QR Kodumu Göster</button>':'<p style="font-size:12px;color:#9c7d6c">Aşağıdakiler tasarım örneğidir; hesabında gerçek damga veya katılım oluşturmaz.</p>'+[['☕','Kahve Sadakat Kartı','5 kahvede 1 hediye','3/5','60%'],['🍰','Pastane Kartı','8 alışverişte hediye','2/8','25%'],['🍔','Restoran Kartı','6 menüde 1 hediye','4/6','67%']].map(x=>'<article class="cards-sample"><div class="cards-sample-top"><div class="cards-sample-icon">'+x[0]+'</div><div><strong>'+x[1]+'</strong><small>'+x[2]+'</small></div></div><div class="progress"><i style="width:'+x[4]+'"></i></div><div class="foot"><span>Örnek damga ilerlemesi</span><b>'+x[3]+'</b></div><button data-carddetail>Nasıl çalışır? ›</button></article>').join('');
-root.innerHTML='<h2 class="cards-title">Kartlarım ▤</h2><p class="cards-caption">Tüm işletme sadakat kartların bir arada.</p><div class="cards-count"><span>Katıldığım işletmeler</span><strong>0 Kart</strong></div><div class="cards-tabs">'+btns+'</div>'+body+'<p class="reward-note">Test sürümü · İşletme bağlantısı henüz kurulmadı.</p>';
-root.querySelectorAll('[data-cardtab]').forEach(b=>b.addEventListener('click',()=>renderCards(b.dataset.cardtab)));
-root.querySelector('#cardQRshow')?.addEventListener('click',showMemberQR);
-root.querySelectorAll('[data-carddetail]').forEach(b=>b.addEventListener('click',showDemo));
+async function renderCards(tab='mine'){
+ const root=document.getElementById('tabContent');if(!root||!authUser)return;
+ root.style.display='block';root.style.background='transparent';root.style.padding='0';
+ root.innerHTML='<div class="wallet-head"><h2>Kartlarım</h2><p>Sadakat kartların ve damga ilerlemen</p></div><div class="wallet-member"><b id="walletMemberNumber">Müşteri numaran yükleniyor…</b><button type="button" id="walletQr">QR Kodum</button></div><div class="cards-tabs"><button type="button" id="walletMy" class="active">Kartlarım</button><button type="button" id="walletGift">Hediyelerim</button><button type="button" id="walletOld">Geçmişim</button></div><div id="walletList">Kartların yükleniyor…</div>';
+ root.querySelector('#walletQr').onclick=showMemberQR;
+ root.querySelector('#walletMy').onclick=()=>renderCards('mine');
+ root.querySelector('#walletGift').onclick=()=>renderRewards('ready');
+ root.querySelector('#walletOld').onclick=()=>renderRewards('history');
+ const id=authUser.id;
+ try{
+  const token=(await ensureSession())?.access_token;
+  if(!token)throw Error('Yeniden giriş yapmalısın.');
+  try{
+   const code=Number(await api('/rest/v1/rpc/loyalty_my_short_code','POST',{},token));
+   if(Number.isInteger(code)&&code>=100000&&code<=999999){
+    const value=String(code);root.querySelector('#walletMemberNumber').textContent='Müşteri No: '+value.slice(0,3)+' '+value.slice(3);
+   }
+  }catch(err){root.querySelector('#walletMemberNumber').textContent='Müşteri numarası alınamadı';}
+  const result=await Promise.allSettled([
+    api('/rest/v1/rpc/loyalty_my_reward_summary','POST',{},token),
+    api('/rest/v1/rpc/loyalty_my_enrollments','POST',{},token)
+  ]);
+  if(!root.isConnected||authUser?.id!==id)return;
+  if(result.every(x=>x.status==='rejected'))throw Error('Sadakat kayıtlarına ulaşılamıyor.');
+  const byId=new Map();
+  const joins=result[1].status==='fulfilled'&&Array.isArray(result[1].value)?result[1].value:[];
+  const progress=result[0].status==='fulfilled'&&Array.isArray(result[0].value)?result[0].value:[];
+  for(const row of joins)if(row.campaign_id)byId.set(row.campaign_id,row);
+  for(const row of progress)if(row.campaign_id)byId.set(row.campaign_id,{...(byId.get(row.campaign_id)||{}),...row});
+  const list=root.querySelector('#walletList');list.replaceChildren();
+  if(!byId.size){list.innerHTML='<div class="cards-empty"><div class="pic">▦</div><h3>Henüz işletme kartın yok</h3><p>Bir işletmenin kampanyasına katıldığında kartın burada görünecek.</p></div>';return;}
+  for(const item of byId.values()){
+   const needed=Math.max(1,Number(item.stamps_required)||1);
+   const count=Math.max(0,Number(item.available_stamps??item.stamp_count)||0);
+   const article=document.createElement('article');article.className='wallet-card';
+   const h=document.createElement('h3');h.textContent=item.business_name||'İşletme';
+   const desc=document.createElement('p');desc.textContent=item.campaign_name||'Sadakat kampanyası';
+   const stat=document.createElement('strong');stat.textContent=count+' / '+needed+' damga';
+   const bar=document.createElement('div');bar.className='wallet-bar';
+   const fill=document.createElement('i');fill.style.width=Math.min(100,count/needed*100)+'%';bar.append(fill);
+   const detail=document.createElement('button');detail.textContent='Detayları Gör ›';detail.onclick=()=>{
+    const pop=document.getElementById('modalContent');if(!pop)return;
+    pop.replaceChildren();
+    for(const value of [item.business_name||'İşletme',item.campaign_name||'Kampanya','Damga: '+count+' / '+needed,'Kullanılan ödül: '+Number(item.redeemed_count||0)]){
+     const line=document.createElement('p');line.textContent=value;pop.append(line);
+    }
+    document.getElementById('overlay')?.classList.add('show');
+   };
+   article.append(h,desc,stat,bar,detail);list.append(article);
+  }
+ }catch(e){const list=root.querySelector('#walletList');if(list)list.textContent='Kartlar yüklenemedi: '+e.message;}
 }
 async function renderRewards(tab='ready'){
  const root=document.getElementById('tabContent');if(!root)return;
