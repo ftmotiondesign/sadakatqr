@@ -161,6 +161,8 @@ const APP_URL='https://ftmotiondesign.github.io/sadakatqr/';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let modalType='',session=null,authUser=null,authBusy=false;
+if(new URLSearchParams(location.search).get('demo')==='ft-motion-design'){window.addEventListener('load',()=>{if(!document.getElementById('welcome').classList.contains('hidden'))showModal(new URLSearchParams(location.search).get('auth')==='login'?'login':'register')},{once:true})}
+
 function users(){return authUser?[{id:authUser.id,name:authUser.user_metadata?.full_name||authUser.email?.split('@')[0]||'Üye',email:authUser.email}]:[]}
 function showModal(type){
  modalType=type;const title=type==='register'?'Ücretsiz Üye Ol':type==='login'?'Giriş Yap':type==='reset'?'Yeni Şifre Belirle':'Nasıl Kullanılır?';
