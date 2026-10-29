@@ -333,7 +333,7 @@ async function loadHomeSponsoredAds(){
 let liveOfferRows=[];
 function favoriteStoreKey(){return 'sadakatqr_favorites_'+(authUser?.id||'guest')}
 function favoriteNames(){try{const v=JSON.parse(localStorage.getItem(favoriteStoreKey())||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string').slice(0,100):[]}catch{return []}}
-function saveFavorite(name){if(!authUser||!name)return;const names=favoriteNames();const next=names.includes(name)?names.filter(x=>x!==name):[...names,name];localStorage.setItem(favoriteStoreKey(),JSON.stringify(next));if(document.getElementById('favList'))renderFavorites();else if(document.getElementById('liveHomeOffers'))drawLiveOffers()}
+function saveFavorite(name){if(!name)return false;try{const names=favoriteNames();const next=names.includes(name)?names.filter(x=>x!==name):[...names,name];localStorage.setItem(favoriteStoreKey(),JSON.stringify(next));if(document.getElementById('favList'))renderFavorites();else if(document.getElementById('liveHomeOffers'))drawLiveOffers();return next.includes(name)}catch(err){alert('Favori kaydedilemedi: Tarayıcı depolama iznini kontrol edin.');return null}}
 function recommendFavorite(name){const value='SadakatQR üzerinde '+name+' işletmesini keşfet: '+APP_URL;if(navigator.share){navigator.share({title:name,text:value,url:APP_URL}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(value).then(()=>alert('Tavsiye bağlantısı kopyalandı.')).catch(()=>alert(value))}else alert(value)}
 function renderFavorites(){
  const root=document.getElementById('tabContent');if(!root)return;
@@ -383,7 +383,7 @@ async function loadLiveSponsoredOffers(){
   updateLiveDistricts();drawLiveOffers();
  }catch(e){home.textContent='Kampanyalar yüklenemedi. Fırsatlar veritabanı bağlantısını kontrol edin.';const other=document.getElementById('liveSponsoredOffers');if(other)other.textContent=''}
 }
-document.addEventListener('click',e=>{const btn=e.target.closest('[data-fav-business]');if(btn){saveFavorite(btn.dataset.favBusiness);btn.textContent=favoriteNames().includes(btn.dataset.favBusiness)?'♥ Favorilerimde':'♡ Favoriye Ekle'}});
+document.addEventListener('click',e=>{const btn=e.target.closest('[data-fav-business]');if(!btn)return;e.preventDefault();const name=btn.dataset.favBusiness;const added=saveFavorite(name);if(added!==null&&btn.isConnected)btn.textContent=added?'♥ Favorilerimde':'♡ Favoriye Ekle';});
 function drawOffers(){
  const filters=document.getElementById('offerFilters'),grid=document.getElementById('offersGrid');if(!filters||!grid)return;
  const cats=['Tümü','Kafe','Pastane','Restoran'];
