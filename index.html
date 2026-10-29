@@ -328,24 +328,45 @@ async function loadHomeSponsoredAds(){
   }));
  }catch(e){if(box.isConnected)box.innerHTML='<p style="padding:12px;color:#927968;font-size:13px">Reklamlar yüklenemedi.</p>'}
 }
+let liveOfferRows=[];
 function renderOffers(){
  const root=document.getElementById('tabContent');root.style.display='block';root.style.background='transparent';root.style.padding='0';
- root.innerHTML='<h2 class="offers-title">Fırsatlar ✨</h2><p class="offers-sub">Sevdiğin işletmelerin fırsatlarını keşfet.</p><input class="offers-search" id="offerSearch" type="search" placeholder="İşletme veya fırsat ara..." aria-label="Fırsat ara"><h3 style="margin:16px 0 8px">Sponsorlu Fırsatlar</h3><div id="liveSponsoredOffers" aria-live="polite">Yükleniyor…</div><h3 style="margin:17px 0 8px">Örnek Fırsatlar</h3><div class="offers-filters" id="offerFilters"></div><div class="offers-grid" id="offersGrid"></div><p class="reward-note">Şimdilik örnek fırsatlar gösteriliyor.</p>';
- const input=root.querySelector('#offerSearch');input.value=offerSearch;input.addEventListener('input',e=>{offerSearch=e.target.value;drawOffers()});
- drawOffers();loadLiveSponsoredOffers();
+ root.innerHTML='<h2 class="offers-title">Fırsatlar ✨</h2><p class="offers-sub">İşletmelerin güncel kampanyalarını keşfet.</p><input class="offers-search" id="offerSearch" type="search" placeholder="İşletme veya kampanya ara..." aria-label="Fırsat ara"><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0"><select id="liveOfferCity" aria-label="İl" style="min-width:0;padding:9px;border-radius:9px"><option value="">Tüm iller</option></select><select id="liveOfferDistrict" aria-label="İlçe" style="min-width:0;padding:9px;border-radius:9px"><option value="">Tüm ilçeler</option></select><select id="liveOfferSector" aria-label="Sektör" style="min-width:0;padding:9px;border-radius:9px"><option value="">Tüm sektörler</option></select></div><h3 style="margin:18px 0 8px">Ana Sayfada Öne Çıkanlar</h3><div id="liveHomeOffers" aria-live="polite">Yükleniyor…</div><h3 style="margin:18px 0 8px">Sponsorlu Fırsatlar</h3><div id="liveSponsoredOffers" aria-live="polite">Yükleniyor…</div>';
+ root.querySelector('#offerSearch').value=offerSearch;
+ root.querySelector('#offerSearch').addEventListener('input',e=>{offerSearch=e.target.value;drawLiveOffers()});
+ ['liveOfferCity','liveOfferDistrict','liveOfferSector'].forEach(id=>root.querySelector('#'+id).addEventListener('change',()=>{if(id==='liveOfferCity')updateLiveDistricts();drawLiveOffers()}));
+ loadLiveSponsoredOffers();
+}
+function updateLiveDistricts(){
+ const city=document.getElementById('liveOfferCity')?.value||'',el=document.getElementById('liveOfferDistrict');if(!el)return;
+ const districts=[...new Set(liveOfferRows.filter(x=>!city||x.city===city).map(x=>x.district).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
+ el.innerHTML='<option value="">Tüm ilçeler</option>'+districts.map(x=>'<option value="'+safeLoyaltyText(x)+'">'+safeLoyaltyText(x)+'</option>').join('');
+}
+function drawLiveOffers(){
+ const home=document.getElementById('liveHomeOffers'),other=document.getElementById('liveSponsoredOffers');if(!home||!other)return;
+ const city=document.getElementById('liveOfferCity').value,district=document.getElementById('liveOfferDistrict').value,sector=document.getElementById('liveOfferSector').value,q=offerSearch.trim().toLocaleLowerCase('tr-TR');
+ const rows=liveOfferRows.filter(r=>(!city||r.city===city)&&(!district||r.district===district)&&(!sector||r.sector===sector)&&(!q||[r.business_name,r.campaign_name,r.sector,r.city,r.district].join(' ').toLocaleLowerCase('tr-TR').includes(q)));
+ const render=(box,items)=>{box.innerHTML=items.length?items.map(r=>'<article class="offer-card" style="margin:8px 0;padding:14px;border:1px solid #ead8c7;border-radius:13px"><div class="offer-info"><small style="color:#995422">Sponsorlu · '+safeLoyaltyText(r.business_name)+'</small><h3>'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+[r.city,r.district,r.sector].filter(Boolean).map(safeLoyaltyText).join(' · ')+'</p><p>'+Number(r.stamps_required)+' damgada ödül</p><button type="button" data-live-offer="'+safeLoyaltyText(r.campaign_id)+'">Detayları Gör ›</button></div></article>').join(''):'<p class="offers-empty">Bu alanda eşleşen kampanya bulunmuyor.</p>'};
+ render(home,rows.filter(r=>r.placement==='home'));render(other,rows.filter(r=>r.placement==='offers'));
+ [home,other].forEach(box=>box.querySelectorAll('[data-live-offer]').forEach(btn=>btn.addEventListener('click',()=>{
+ const r=rows.find(x=>x.campaign_id===btn.dataset.liveOffer);if(!r)return;
+ document.getElementById('modalContent').innerHTML='<h2>'+safeLoyaltyText(r.business_name)+'</h2><h3>'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+[r.city,r.district,r.sector].filter(Boolean).map(safeLoyaltyText).join(' · ')+'</p><p>Ödül için '+Number(r.stamps_required)+' damga gerekli.</p><small>Sponsorlu kampanya</small>';
+ document.getElementById('overlay').classList.add('show');
+ })));
 }
 async function loadLiveSponsoredOffers(){
- const box=document.getElementById('liveSponsoredOffers');if(!box)return;
+ const home=document.getElementById('liveHomeOffers');if(!home)return;
  try{
-  const result=await api('/rest/v1/rpc/loyalty_public_sponsored_offers','POST',{p_placement:'offers'});
-  if(!box.isConnected)return;
-  box.innerHTML=result.length?result.map(r=>'<article class="offer-card" style="margin:8px 0;padding:15px;border:1px solid #ead8c7;border-radius:14px"><div class="offer-info"><small style="color:#995422">Sponsorlu · '+safeLoyaltyText(r.business_name)+'</small><h3>'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+Number(r.stamps_required)+' damga ile ödül fırsatı</p><button type="button" data-sponsored-campaign="'+safeLoyaltyText(r.campaign_id)+'">Detayları Gör ›</button></div></article>').join(''):'<p class="offers-empty">Şu anda sponsorlu fırsat bulunmuyor.</p>';
-  box.querySelectorAll('[data-sponsored-campaign]').forEach(btn=>btn.addEventListener('click',()=>{
-   const r=result.find(x=>x.campaign_id===btn.dataset.sponsoredCampaign);if(!r)return;
-   document.getElementById('modalContent').innerHTML='<h2>'+safeLoyaltyText(r.business_name)+'</h2><h3>'+safeLoyaltyText(r.campaign_name)+'</h3><p>Ödül için '+Number(r.stamps_required)+' damga gerekli.</p><small>Sponsorlu kampanya</small>';
-   document.getElementById('overlay').classList.add('show');
-  }));
- }catch(e){if(box.isConnected)box.textContent='Sponsorlu fırsatlar şu anda yüklenemedi.'}
+  const sess=await ensureSession();
+  const rows=await api('/rest/v1/rpc/loyalty_public_sponsored_offers_directory','POST',{},sess?.access_token||null);
+  if(!home.isConnected)return;liveOfferRows=Array.isArray(rows)?rows:[];
+  const city=document.getElementById('liveOfferCity'),sector=document.getElementById('liveOfferSector');
+  for(const [el,key] of [[city,'city'],[sector,'sector']]){
+   const labels=[...new Set(liveOfferRows.map(x=>x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
+   el.innerHTML='<option value="">'+(key==='city'?'Tüm iller':'Tüm sektörler')+'</option>'+labels.map(x=>'<option value="'+safeLoyaltyText(x)+'">'+safeLoyaltyText(x)+'</option>').join('');
+  }
+  updateLiveDistricts();drawLiveOffers();
+ }catch(e){home.textContent='Kampanyalar yüklenemedi. Fırsatlar veritabanı bağlantısını kontrol edin.';const other=document.getElementById('liveSponsoredOffers');if(other)other.textContent=''}
 }
 function drawOffers(){
  const filters=document.getElementById('offerFilters'),grid=document.getElementById('offersGrid');if(!filters||!grid)return;
