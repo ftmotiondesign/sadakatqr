@@ -126,8 +126,8 @@ body:has(.welcome:not(.hidden)){overflow:hidden}
 <section id="dash" class="dash"><div class="dash-top"><header class="head"><div class="brand brand-logo"><img src="./assets/sadakatqr-icon.svg" alt="" aria-hidden="true"><span>Sadakat<b>QR</b></span></div><button class="help" onclick="logout()">Çıkış Yap</button></header><h1>Merhaba <em id="firstName"></em> 👋</h1><p>Bugün yeni fırsatlar seni bekliyor.</p></div>
 <div class="dash-body">
 <div class="membercard"><h2>▦ &nbsp;Üye QR Kodum</h2><div class="member-layout"><div class="member-left"><div class="muted">Kasada bu kodu göstererek fırsatlardan yararlanabilirsin.</div><div class="member-name" id="memberName"></div><div class="member-no" id="memberId"></div><button class="qr-action" onclick="showMemberQR()">▦ &nbsp; QR'ı Göster ›</button></div><div class="qrbox" id="qrbox">QR oluşturuluyor...</div></div></div>
-<div class="stat"><div><span class="metric-icon">📣</span><strong>0</strong>Aktif Kampanya</div><div><span class="metric-icon">🎁</span><strong>0</strong>Hazır Hediye</div><div><span class="metric-icon">★</span><strong>0</strong>Toplam Damga</div></div>
-<div id="homeSections"><div class="section-heading"><h2>Katıldığım Kampanyalar</h2><button onclick="switchTab('kartlar')">Tümünü Gör ›</button></div><div class="cards-scroll"><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=500&q=80')">Kahve Dünyası</div><div class="loyalty-details"><strong>5 kahvede 1 hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80')">Burger Noktası</div><div class="loyalty-details"><strong>6 menüde 1 hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80')">Pastane</div><div class="loyalty-details"><strong>8 alışverişte hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article></div>
+<div class="stat"><div><span class="metric-icon">📣</span><strong id="realCampaignCount">—</strong>Katıldığım Kampanya</div><div><span class="metric-icon">🎁</span><strong id="realGiftCount">—</strong>Hazır Hediye</div><div><span class="metric-icon">★</span><strong id="realStampCount">—</strong>Toplam Damga</div></div>
+<div id="homeSections"><div class="section-heading"><h2>Katıldığım Kampanyalar</h2><button onclick="switchTab('kartlar')">Tümünü Gör ›</button></div><div class="cards-scroll" id="realLoyaltyCards"><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=500&q=80')">Kahve Dünyası</div><div class="loyalty-details"><strong>5 kahvede 1 hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80')">Burger Noktası</div><div class="loyalty-details"><strong>6 menüde 1 hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80')">Pastane</div><div class="loyalty-details"><strong>8 alışverişte hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article></div>
 <div class="section-heading"><h2>Yakındaki Fırsatlar</h2><button onclick="switchTab('firsatlar')">Tümünü Gör ›</button></div><div class="deal-list"><div class="deal"><img alt="Kahve" src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=500&q=80"><div class="copy"><strong>Kahve fırsatları</strong><small>Tanıtım örneği</small></div></div><div class="deal"><img alt="Tatlı" src="https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80"><div class="copy"><strong>Tatlı fırsatları</strong><small>Tanıtım örneği</small></div></div></div></div>
 <div id="tabContent"></div></div><nav class="bottom"><button class="active" data-tab="anasayfa" onclick="switchTab('anasayfa')"><i>⌂</i>Ana Sayfa</button><button data-tab="oduller" onclick="switchTab('oduller')"><i>🎁</i>Ödüllerim</button><button data-tab="kartlar" onclick="switchTab('kartlar')"><i>▤</i>Kartlar</button><button data-tab="firsatlar" onclick="switchTab('firsatlar')"><i>◇</i>Fırsatlar</button><button data-tab="hesabim" onclick="switchTab('hesabim')"><i>♙</i>Hesabım</button></nav></section></main>
 <div id="overlay" class="shade" onclick="if(event.target===this)hideModal()"><div class="modal"><button class="close" onclick="hideModal()">✕</button><div id="modalContent"></div></div></div>
@@ -215,11 +215,32 @@ async function loadShortMemberNumber(expectedId){
   if(authUser?.id===expectedId)$('#memberId').textContent='Üye No: '+expectedId.slice(0,8).toUpperCase();
  }
 }
+function safeLoyaltyText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function loadRealLoyalty(expectedId){
+ const root=document.getElementById('realLoyaltyCards');
+ if(!root)return;
+ root.innerHTML='<div class="muted" style="padding:16px">Damga kayıtların yükleniyor…</div>';
+ try{
+  const sess=await ensureSession();
+  if(!sess?.access_token)throw Error('Giriş yapmalısın');
+  const records=await api('/rest/v1/rpc/loyalty_my_progress','POST',{},sess.access_token);
+  if(authUser?.id!==expectedId)return;
+  const rows=Array.isArray(records)?records:[];
+  document.getElementById('realCampaignCount').textContent=String(rows.length);
+  document.getElementById('realStampCount').textContent=String(rows.reduce((n,r)=>n+Number(r.stamp_count||0),0));
+  // Ödül teslimi henüz aktif olmadığından hak edilenler hazır ödül diye gösterilmez.
+  document.getElementById('realGiftCount').textContent='—';
+  root.innerHTML=rows.length?rows.map(r=>{
+   const needed=Math.max(1,Number(r.stamps_required)||1),count=Math.max(0,Number(r.stamp_count)||0),progress=count%needed||((count>0)?needed:0);
+   return '<article class="loyalty" style="min-width:220px"><div class="loyalty-details"><small>'+safeLoyaltyText(r.business_name)+'</small><strong>'+safeLoyaltyText(r.campaign_name)+'</strong><small>'+count+' / '+needed+' damga · '+(r.active?'Aktif':'Pasif')+'</small><div class="stamp-row">'+('●'.repeat(Math.min(progress,needed)))+('○'.repeat(Math.max(0,needed-progress)))+'</div><small>'+(count>=needed?'Ödül eşiğine ulaşıldı; teslim işlemi henüz aktif değil.':'Damgaların işletme tarafından kaydedilir.')+'</small></div></article>'
+  }).join(''):'<div class="muted" style="padding:16px">Henüz damga kaydın bulunmuyor. İşletmede QR kodunu göstererek başlayabilirsin.</div>';
+ }catch(err){root.innerHTML='<div class="muted" style="padding:16px">Gerçek damga kayıtları henüz yüklenemedi: '+safeLoyaltyText(err.message)+'</div>'}
+}
 function enter(u){
  if(!u)return;
  $('#welcome').classList.add('hidden');$('#dash').classList.add('active');
  $('#firstName').textContent=u.name.split(' ')[0];$('#memberName').textContent=u.name;
- $('#memberId').textContent='Üye numarası yükleniyor…';loadShortMemberNumber(u.id);
+ $('#memberId').textContent='Üye numarası yükleniyor…';loadShortMemberNumber(u.id);loadRealLoyalty(u.id);
  const box=$('#qrbox');box.innerHTML='';
  if(typeof QRCode!=='undefined')new QRCode(box,{text:'SADAKATQR:'+u.id,width:170,height:170,colorDark:'#231914',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
  else box.textContent='QR oluşturucu yüklenemedi';
