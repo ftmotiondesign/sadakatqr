@@ -294,7 +294,7 @@ function enter(u){
  if(!u)return;
  $('#welcome').classList.add('hidden');$('#dash').classList.add('active');
  $('#firstName').textContent=u.name.split(' ')[0];$('#memberName').textContent=u.name;
- $('#memberId').textContent='Üye numarası yükleniyor…';loadShortMemberNumber(u.id);loadRealLoyalty(u.id);loadMyEnrollments();loadHomeSponsoredAds();acceptReferralFromLink();
+ $('#memberId').textContent='Üye numarası yükleniyor…';loadShortMemberNumber(u.id);loadRealLoyalty(u.id);loadMyEnrollments();loadHomeSponsoredAds();loadCustomerCover();acceptReferralFromLink();
  const box=$('#qrbox');box.innerHTML='';
  if(typeof QRCode!=='undefined')new QRCode(box,{text:'SADAKATQR:'+u.id,width:170,height:170,colorDark:'#231914',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
  else box.textContent='QR oluşturucu yüklenemedi';
@@ -455,15 +455,46 @@ async function showGiftOffers(giftId){
  target.innerHTML=rows.length?rows.map(r=>'<article style="border:1px solid #e5d6c9;border-radius:13px;padding:14px;margin:9px 0"><small style="color:#93603d">Sponsorlu</small><h3 style="font-size:16px;margin:7px 0">'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+safeLoyaltyText(r.business_name)+'</p><small>Hediye için '+Number(r.stamps_required)+' damga gerekli</small></article>').join(''):'Bu işletmenin şu anda yayınlanan sponsorlu kampanyası bulunmuyor.';
  }catch(err){if(target.isConnected)target.textContent='Kampanyalar yüklenemedi: '+err.message}
 }
+async function loadCustomerCover(){
+ const hero=document.querySelector('#dash .dash-top');if(!hero)return;
+ try{
+ const sess=await ensureSession();if(!sess)return;
+ const rows=await api('/rest/v1/rpc/loyalty_my_cover','POST',{},sess.access_token);
+ const path=rows?.[0]?.image_path;
+ hero.style.backgroundImage=path?'linear-gradient(90deg,rgba(42,24,17,.76),rgba(50,25,15,.45)),url("'+SUPABASE_URL+'/storage/v1/object/public/loyalty-covers/'+encodeURI(path)+'?t='+Date.now()+'")':'';
+ hero.style.backgroundSize='cover';hero.style.backgroundPosition='center';
+ }catch(e){/* Existing theme remains when cover storage has not been configured. */}
+}
+async function showCustomerCoverEditor(){
+ const modal=document.getElementById('modalContent');if(!modal)return;
+ modal.innerHTML='<h2>🖼️ Kapak Görselim</h2><p>1200 × 600 px önerilir. JPG, PNG veya WebP, en fazla 3 MB.</p><img id="customerCoverPreview" style="width:100%;aspect-ratio:2/1;object-fit:cover;border-radius:12px" hidden><input id="customerCoverFile" type="file" accept="image/jpeg,image/png,image/webp"><button class="primary" type="button" id="customerCoverSave">Kapak Görselini Kaydet</button><button type="button" id="customerCoverRemove">Varsayılan Kapağa Dön</button><p id="customerCoverStatus" role="status"></p>';
+ document.getElementById('overlay').classList.add('show');
+ const file=modal.querySelector('#customerCoverFile'),img=modal.querySelector('#customerCoverPreview'),status=modal.querySelector('#customerCoverStatus');
+ file.onchange=()=>{const f=file.files[0];if(f){const u=URL.createObjectURL(f);img.onload=()=>URL.revokeObjectURL(u);img.src=u;img.hidden=false}};
+ modal.querySelector('#customerCoverSave').onclick=async()=>{
+ const f=file.files[0];if(!f)return status.textContent='Bir fotoğraf seçmelisin.';
+ if(f.size>3*1024*1024||!['image/jpeg','image/png','image/webp'].includes(f.type))return status.textContent='En fazla 3 MB JPG, PNG veya WebP seç.';
+ try{
+ status.textContent='Yükleniyor…';const sess=await ensureSession();if(!sess)throw Error('Giriş yapmalısın');
+ const u=authUser||await api('/auth/v1/user','GET',null,sess.access_token);
+ const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[f.type],path='customer/'+u.id+'/cover.'+ext;
+ const res=await fetch(SUPABASE_URL+'/storage/v1/object/loyalty-covers/'+path,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+sess.access_token,'Content-Type':f.type,'x-upsert':'true'},body:f});
+ if(!res.ok)throw Error((await res.json()).message||'Görsel yüklenemedi');
+ await api('/rest/v1/rpc/loyalty_set_cover','POST',{p_owner_type:'customer',p_image_path:path},sess.access_token);
+ status.textContent='Kapak başarıyla kaydedildi.';await loadCustomerCover();
+ }catch(e){status.textContent='Kaydedilemedi: '+e.message}
+ };
+ modal.querySelector('#customerCoverRemove').onclick=async()=>{try{const sess=await ensureSession();await api('/rest/v1/rpc/loyalty_set_cover','POST',{p_owner_type:'customer',p_image_path:null},sess.access_token);img.hidden=true;status.textContent='Varsayılan kapak açıldı.';await loadCustomerCover()}catch(e){status.textContent=e.message}};
+}
 function renderAccount(){
 const root=document.getElementById('tabContent');root.style.display='block';root.style.background='transparent';root.style.padding='0';
 const u=users()[0];
 const name=u?u.name:'Üye';const email=u?u.email:'';
-root.innerHTML='<h2 class="account-title">Hesabım</h2><p class="account-sub">Üyelik bilgilerin ve ayarların.</p><div class="account-person"><div class="account-avatar">👤</div><div><b id="accountName"></b><small id="accountEmail"></small></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">▦</div><div><strong>Kişisel QR Kodum</strong><small>Tüm anlaşmalı işletmeler için tek kod</small></div><button id="accountQr">Göster ›</button></div><div class="account-row"><div class="account-icon">🎁</div><div><strong>Aldığım Hediyeler</strong><small>Teslim edilen ödüllerim ve detayları</small></div><button id="accountReceivedGifts">Görüntüle ›</button></div><div class="account-row"><div class="account-icon">✉</div><div><strong>E-posta</strong><small id="accountMail"></small></div></div><div class="account-row"><div class="account-icon">🔒</div><div><strong>Şifre ve güvenlik</strong><small>Şifre yenileme canlı üyelikte açılacak</small></div></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">ⓘ</div><div><strong>Nasıl Kullanılır?</strong><small>Sadakat Kartım hakkında kısa rehber</small></div><button id="accountHelp">Aç ›</button></div><div class="account-row"><div class="account-icon">🔔</div><div><strong>Bildirimler</strong><small>İzin ayarları canlı sistemde açılacak</small></div></div></div><button class="account-signout" id="accountLogout">↪ Hesaptan Çıkış Yap</button><div class="account-legal"><div class="account-legal-title">YASAL BİLGİLER</div><div class="account-legal-links"><button type="button" data-legal="kvkk">KVKK Aydınlatma</button><button type="button" data-legal="privacy">Gizlilik Politikası</button><button type="button" data-legal="terms">Kullanım Koşulları</button><button type="button" data-legal="cookies">Çerez Politikası</button></div></div><p class="account-hint">Geliştirme sürümü · Üyelik bağımsız Supabase sisteminde yönetilir.</p>';
+root.innerHTML='<h2 class="account-title">Hesabım</h2><p class="account-sub">Üyelik bilgilerin ve ayarların.</p><div class="account-person"><div class="account-avatar">👤</div><div><b id="accountName"></b><small id="accountEmail"></small></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">▦</div><div><strong>Kişisel QR Kodum</strong><small>Tüm anlaşmalı işletmeler için tek kod</small></div><button id="accountQr">Göster ›</button></div><div class="account-row"><div class="account-icon">🖼️</div><div><strong>Kapak Görselim</strong><small>Fotoğrafımı değiştir veya kaldır</small></div><button id="accountCoverButton">Düzenle ›</button></div><div class="account-row"><div class="account-icon">🎁</div><div><strong>Aldığım Hediyeler</strong><small>Teslim edilen ödüllerim ve detayları</small></div><button id="accountReceivedGifts">Görüntüle ›</button></div><div class="account-row"><div class="account-icon">✉</div><div><strong>E-posta</strong><small id="accountMail"></small></div></div><div class="account-row"><div class="account-icon">🔒</div><div><strong>Şifre ve güvenlik</strong><small>Şifre yenileme canlı üyelikte açılacak</small></div></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">ⓘ</div><div><strong>Nasıl Kullanılır?</strong><small>Sadakat Kartım hakkında kısa rehber</small></div><button id="accountHelp">Aç ›</button></div><div class="account-row"><div class="account-icon">🔔</div><div><strong>Bildirimler</strong><small>İzin ayarları canlı sistemde açılacak</small></div></div></div><button class="account-signout" id="accountLogout">↪ Hesaptan Çıkış Yap</button><div class="account-legal"><div class="account-legal-title">YASAL BİLGİLER</div><div class="account-legal-links"><button type="button" data-legal="kvkk">KVKK Aydınlatma</button><button type="button" data-legal="privacy">Gizlilik Politikası</button><button type="button" data-legal="terms">Kullanım Koşulları</button><button type="button" data-legal="cookies">Çerez Politikası</button></div></div><p class="account-hint">Geliştirme sürümü · Üyelik bağımsız Supabase sisteminde yönetilir.</p>';
 root.querySelector('#accountName').textContent=name;
 root.querySelector('#accountEmail').textContent=email;
 root.querySelector('#accountMail').textContent=email;
-root.querySelector('#accountReceivedGifts')?.addEventListener('click',showReceivedGifts);
+root.querySelector('#accountReceivedGifts')?.addEventListener('click',showReceivedGifts);root.querySelector('#accountCoverButton')?.addEventListener('click',showCustomerCoverEditor);
 root.querySelector('#accountQr').addEventListener('click',showMemberQR);
 root.querySelector('#accountHelp').addEventListener('click',()=>showModal('how'));
 root.querySelector('#accountLogout').addEventListener('click',logout);
