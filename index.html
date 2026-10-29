@@ -122,11 +122,12 @@ body:has(.welcome:not(.hidden)){overflow:hidden}
 @media(max-width:699px) and (max-height:580px){.welcome .step small{display:none}.welcome .mock{transform:rotate(10deg) scale(.57)}.welcome .head{margin-bottom:5px}.welcome .step i{margin-bottom:1px}}
 .menu-hint{display:flex;flex-direction:column;align-items:flex-end;gap:0;min-width:54px}.hint-arrow{font-size:22px;line-height:17px;color:#e77a43;font-weight:900;transform-origin:center;animation:pointToMenu 1.05s ease-in-out infinite alternate;margin-right:0}@keyframes pointToMenu{from{transform:translateX(-9px)}to{transform:translateX(3px)}}@media(prefers-reduced-motion:reduce){.hint-arrow{animation:none}}
 .menu-hint .hint-arrow-gif{display:block;width:58px;height:22px;max-width:none;object-fit:contain;margin:0 -3px 0 0;flex-shrink:0}.menu-prompt{gap:5px}.menu-hint{align-items:flex-end;min-width:58px}
+.member-stat button{font:inherit;cursor:pointer;color:inherit;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0}.member-stat button:hover,.member-stat button:focus-visible{outline:2px solid #e37d4b;outline-offset:2px}.stat.member-stat button strong{display:block}
 </style></head><body><main class="app"><section id="welcome" class="welcome"><header class="head"><div class="brand brand-logo"><img src="./assets/sadakatqr-icon.svg" alt="" aria-hidden="true"><span>Sadakat<b>QR</b></span></div><div class="welcome-head-actions"><button class="help" onclick="showModal('how')">ⓘ Nasıl Kullanılır?</button><div class="menu-prompt"><span class="menu-hint" aria-hidden="true"><span class="typewriter">Üye Ol</span><img class="hint-arrow-gif" src="./assets/menu-arrow-animated.svg" alt="" width="58" height="22"></span><button class="menu-toggle" id="welcomeMenuToggle" type="button" aria-label="Giriş seçeneklerini aç" aria-expanded="false" aria-controls="welcomeMenu">☰</button></div></div></header><nav class="welcome-menu" id="welcomeMenu" hidden><button type="button" onclick="showModal('register');closeWelcomeMenu()">Ücretsiz Üye Ol</button><button type="button" onclick="showModal('login');closeWelcomeMenu()">Zaten Üyeyim · Giriş Yap</button><a href="./isletme/">İşletme Girişi</a></nav><h1>Alışveriş yap.<br><em>Biriktir, kazan!</em></h1><p>Sevdiğin işletmelerde ziyaretlerin hediyeye dönüşsün.</p><div class="hero"><div class="copy">Tek QR ile<br>daha çok ödül ✨</div><div class="mock"><div><div class="qrmini">▦</div>Sadakat Kartım<br>QR Kartım</div></div></div><div class="steps"><div class="step"><i>▦</i><strong>Tek QR</strong><small>Kolay katılım</small></div><div class="step"><i>☕</i><strong>Damga Biriktir</strong><small>Ziyaret ettikçe</small></div><div class="step"><i>🎁</i><strong>Hediyeni Al</strong><small>Ödülünü kazan</small></div></div><p class="notice">GELİŞTİRME SÜRÜMÜ · Gerçek e-posta üyeliği testi</p></section>
 <section id="dash" class="dash"><div class="dash-top"><header class="head"><div class="brand brand-logo"><img src="./assets/sadakatqr-icon.svg" alt="" aria-hidden="true"><span>Sadakat<b>QR</b></span></div><button class="help" onclick="logout()">Çıkış Yap</button></header><h1>Merhaba <em id="firstName"></em> 👋</h1><p>Bugün yeni fırsatlar seni bekliyor.</p></div>
 <div class="dash-body">
 <div class="membercard"><h2>▦ &nbsp;Üye QR Kodum</h2><div class="member-layout"><div class="member-left"><div class="muted">Kasada bu kodu göstererek fırsatlardan yararlanabilirsin.</div><div class="member-name" id="memberName"></div><div class="member-no" id="memberId"></div><button class="qr-action" onclick="showMemberQR()">▦ &nbsp; QR'ı Göster ›</button></div><div class="qrbox" id="qrbox">QR oluşturuluyor...</div></div></div>
-<div class="stat"><div><span class="metric-icon">📣</span><strong id="realCampaignCount">—</strong>Katıldığım Kampanya</div><div><span class="metric-icon">🎁</span><strong id="realGiftCount">—</strong>Hazır Hediye</div><div><span class="metric-icon">★</span><strong id="realStampCount">—</strong>Toplam Damga</div></div>
+<div class="stat member-stat"><button type="button" onclick="showMemberStatPopup('campaigns')"><span class="metric-icon">📣</span><strong id="realCampaignCount">—</strong>Katıldığım Kampanya</button><button type="button" onclick="showMemberStatPopup('gifts')"><span class="metric-icon">🎁</span><strong id="realGiftCount">—</strong>Hazır Hediye</button><button type="button" onclick="showMemberStatPopup('stamps')"><span class="metric-icon">★</span><strong id="realStampCount">—</strong>Toplam Damga</button></div>
 <div id="homeSections"><div class="section-heading"><h2>Katıldığım Kampanyalar</h2><button onclick="showJoinedCampaignsPopup()">Tümünü Gör ›</button></div><div class="cards-scroll" id="realLoyaltyCards"><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=500&q=80')">Kahve Dünyası</div><div class="loyalty-details"><strong>5 kahvede 1 hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80')">Burger Noktası</div><div class="loyalty-details"><strong>6 menüde 1 hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article><article class="loyalty"><div class="loyalty-photo" style="background-image:linear-gradient(0deg,#0008,transparent),url('https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80')">Pastane</div><div class="loyalty-details"><strong>8 alışverişte hediye</strong><small>Örnek kampanya · Henüz katılmadın</small><div class="stamp-row">○○○○○○○○</div><button onclick="showDemo()">Detay ›</button></div></article></div>
 <div class="section-heading"><h2>Yakındaki Fırsatlar</h2><button onclick="switchTab('firsatlar')">Tümünü Gör ›</button></div><div class="deal-list"><div class="deal"><img alt="Kahve" src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=500&q=80"><div class="copy"><strong>Kahve fırsatları</strong><small>Tanıtım örneği</small></div></div><div class="deal"><img alt="Tatlı" src="https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80"><div class="copy"><strong>Tatlı fırsatları</strong><small>Tanıtım örneği</small></div></div></div></div>
 <div id="tabContent"></div></div><nav class="bottom"><button class="active" data-tab="anasayfa" onclick="switchTab('anasayfa')"><i>⌂</i>Ana Sayfa</button><button data-tab="oduller" onclick="switchTab('oduller')"><i>🎁</i>Ödüllerim</button><button data-tab="kartlar" onclick="switchTab('kartlar')"><i>▤</i>Kartlar</button><button data-tab="firsatlar" onclick="switchTab('firsatlar')"><i>◇</i>Fırsatlar</button><button data-tab="hesabim" onclick="switchTab('hesabim')"><i>♙</i>Hesabım</button></nav></section></main>
@@ -216,6 +217,7 @@ async function loadShortMemberNumber(expectedId){
  }
 }
 function safeLoyaltyText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+let memberStatRows=[];
 async function loadRealLoyalty(expectedId){
  const root=document.getElementById('realLoyaltyCards');
  if(!root)return;
@@ -228,6 +230,7 @@ async function loadRealLoyalty(expectedId){
   catch(error){records=await api('/rest/v1/rpc/loyalty_my_progress','POST',{},sess.access_token)}
   if(authUser?.id!==expectedId)return;
   const rows=Array.isArray(records)?records:[];
+  memberStatRows=rows;
   document.getElementById('realCampaignCount').textContent=String(rows.length);
   document.getElementById('realStampCount').textContent=String(rows.reduce((n,r)=>n+Number(r.stamp_count||0),0));
   // Ödül teslimi henüz aktif olmadığından hak edilenler hazır ödül diye gösterilmez.
@@ -364,6 +367,24 @@ async function renderRewards(tab='ready'){
   dest.outerHTML='<div style="display:grid;gap:12px">'+body+'</div>';
  }catch(err){dest.textContent='Ödül kayıtları yüklenemedi: '+err.message}
 }
+
+function showMemberStatPopup(kind){
+ const modal=document.getElementById('modalContent');if(!modal)return;
+ const rows=Array.isArray(memberStatRows)?memberStatRows:[];
+ const title={campaigns:'Katıldığım Kampanyalar',gifts:'Hazır Hediyelerim',stamps:'Damga Detaylarım'}[kind];
+ const giftsKnown=rows.every(r=>r.redeemed_count!==undefined);
+ const shown=kind==='gifts'?(giftsKnown?rows.filter(r=>Number(r.available_stamps||0)>=Math.max(1,Number(r.stamps_required)||1)):[]):rows;
+ const count=kind==='campaigns'?rows.length:kind==='stamps'?rows.reduce((n,r)=>n+Number(r.stamp_count||0),0):giftsKnown?rows.reduce((n,r)=>n+Math.floor(Number(r.available_stamps||0)/Math.max(1,Number(r.stamps_required)||1)),0):'—';
+ const cards=shown.map(r=>{
+ const earned=Math.max(0,Number(r.stamp_count)||0),available=Math.max(0,Number(r.available_stamps??r.stamp_count)||0),needed=Math.max(1,Number(r.stamps_required)||1);
+ const earnedGift=Math.floor(available/needed);
+ const detail=kind==='campaigns'?earned+' / '+needed+' damga · '+(r.active?'Aktif':'Pasif'):kind==='gifts'?earnedGift+' kullanılabilir hediye · '+available+' kullanılabilir damga':earned+' kazanılmış damga · '+available+' kullanılabilir';
+ return '<article style="padding:14px;border:1px solid #ecd8ca;border-radius:14px;background:#fff"><strong style="display:block">'+safeLoyaltyText(r.business_name||'İşletme')+'</strong><small style="display:block;margin:5px 0">'+safeLoyaltyText(r.campaign_name||'Kampanya')+'</small><div style="color:#895331;font-size:13px;font-weight:700">'+safeLoyaltyText(detail)+'</div></article>';
+ }).join('');
+ modal.innerHTML='<h2>'+title+'</h2><p style="font-size:13px;color:#806d63">Toplam: <b>'+count+'</b></p><div style="max-height:62dvh;overflow-y:auto;display:grid;gap:10px;padding:3px">'+(cards||(kind==='gifts'&&!giftsKnown?'Hediye bilgileri henüz doğrulanamıyor.':kind==='gifts'?'Henüz hazır hediyen bulunmuyor.':'Henüz kayıt bulunmuyor.'))+'</div>';
+ document.querySelector('#overlay').classList.add('show');
+}
+
 function showJoinedCampaignsPopup(){
  const source=document.getElementById('realLoyaltyCards'),modal=document.getElementById('modalContent');
  if(!source||!modal)return;
