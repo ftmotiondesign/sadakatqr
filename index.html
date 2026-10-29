@@ -347,7 +347,7 @@ function scannedBusinessUrl(raw){
 async function openBusinessScanner(){
  stopBusinessScanner();
  const root=$('#modalContent');
- root.innerHTML='<h2>İşletme QR Okut</h2><p class="scan-note">Kamerayı işletmenin SadakatQR koduna tut.</p><video id="businessScanVideo" class="scan-video" autoplay muted playsinline></video><div id="scanStatus" class="scan-note">Kamera açılıyor…</div><button type="button" class="secondary" onclick="stopBusinessScanner();hideModal()">Kapat</button>';
+ root.innerHTML='<h2>İşletme QR Okut</h2><p class="scan-note">Kamerayı işletmenin SadakatQR koduna tut. · Tarayıcı v2</p><video id="businessScanVideo" class="scan-video" autoplay muted playsinline></video><div id="scanStatus" class="scan-note">Kamera açılıyor…</div><button type="button" class="secondary" onclick="stopBusinessScanner();hideModal()">Kapat</button>';
  $('#overlay').classList.add('show');
  const status=$('#scanStatus'),video=$('#businessScanVideo');
  if(!navigator.mediaDevices?.getUserMedia){status.textContent='Bu tarayıcıda kamera kullanılamıyor. Chrome üzerinden açmayı dene.';return}
