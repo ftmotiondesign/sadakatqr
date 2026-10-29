@@ -35,8 +35,27 @@ function renderCustomerInsights(){
  const box=document.getElementById('customersLive');if(!box)return;
  const query=(document.getElementById('customerSearch')?.value||'').replace(/\s/g,'');
  const rows=customerInsightRows.filter(r=>!query||String(r.customer_code||'').includes(query));
- box.innerHTML=rows.length?rows.map(r=>'<div style="padding:13px 0;border-bottom:1px solid #eee"><strong>Müşteri No: '+htmlSafe(r.customer_code||'—')+'</strong><div class="muted">Toplam damga: '+Number(r.stamp_count)+' · Teslim edilen ödül: '+Number(r.reward_count)+'</div><small>Son işlem: '+(r.last_activity?new Date(r.last_activity).toLocaleString('tr-TR'):'—')+'</small></div>').join(''):'Eşleşen müşteri bulunamadı.';
+ box.innerHTML=rows.length?rows.map(r=>'<div style="padding:13px 0;border-bottom:1px solid #eee"><button type="button" data-customer-detail="'+htmlSafe(r.customer_code||'')+'" style="background:none;border:0;padding:0;text-align:left;font-weight:800;color:#9d4e23;text-decoration:underline;cursor:pointer">Müşteri No: '+htmlSafe(r.customer_code||'—')+'</button><div class="muted">Toplam damga: '+Number(r.stamp_count)+' · Teslim edilen ödül: '+Number(r.reward_count)+'</div><small>Son işlem: '+(r.last_activity?new Date(r.last_activity).toLocaleString('tr-TR'):'—')+'</small></div>').join(''):'Eşleşen müşteri bulunamadı.';
 }
+function closeCustomerDetail(){
+ const popup=document.getElementById('customerDetailOverlay');if(popup)popup.remove();
+}
+async function showCustomerDetail(code){
+ if(!/^[1-9][0-9]{5}$/.test(code))return;
+ closeCustomerDetail();
+ const back=document.createElement('div');back.id='customerDetailOverlay';
+ back.style.cssText='position:fixed;inset:0;z-index:9999;background:#0009;display:grid;place-items:center;padding:16px';
+ back.innerHTML='<section role="dialog" aria-modal="true" aria-label="Müşteri detayları" style="width:min(100%,480px);max-height:88dvh;overflow-y:auto;background:#fffaf5;border-radius:20px;padding:20px;color:#332820"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Müşteri No: '+code+'</h2><button id="closeCustomerDetail" type="button" style="border:0;border-radius:10px;padding:9px;background:#f6e8db;font-size:20px">✕</button></div><p style="color:#806c61">Kampanyalar ve işlem geçmişi</p><div id="customerDetailBody">Yükleniyor…</div></section>';
+ document.body.appendChild(back);
+ back.addEventListener('click',e=>{if(e.target===back||e.target.id==='closeCustomerDetail')closeCustomerDetail()});
+ const body=back.querySelector('#customerDetailBody');
+ try{
+ const rows=await request('/rest/v1/rpc/loyalty_business_customer_detail','POST',{p_customer_code:code},tokens.access_token);
+ if(!body.isConnected)return;
+ body.innerHTML=rows.length?rows.map(r=>'<article style="padding:12px 0;border-top:1px solid #eadbd0"><strong>'+htmlSafe(r.campaign_name)+'</strong><p>Toplam damga: '+Number(r.stamp_count)+' · Kullanılabilir: '+Number(r.available_stamps)+' / '+Number(r.stamps_required)+'</p><p>Teslim edilen ödül: '+Number(r.redeemed_count)+'</p><small>Son damga: '+(r.last_stamp_at?new Date(r.last_stamp_at).toLocaleString('tr-TR'):'—')+'</small><div><small>Son ödül teslimi: '+(r.last_redeemed_at?new Date(r.last_redeemed_at).toLocaleString('tr-TR'):'—')+'</small></div></article>').join(''):'Bu işletmede kayıt bulunamadı.';
+ }catch(err){body.textContent='Müşteri detayları yüklenemedi: '+err.message}
+}
+dialogBody.addEventListener('click',e=>{const b=e.target.closest('[data-customer-detail]');if(b)showCustomerDetail(b.dataset.customerDetail)});
 async function loadBusinessInsights(page){
  const box=document.getElementById(page==='customers'?'customersLive':'reportsLive');if(!box)return;
  if(!currentBusiness||currentBusiness.status!=='approved'){box.textContent='Onaylı işletme hesabı gerekli.';return}
