@@ -305,15 +305,14 @@ function showLegal(type){
 }
 async function showReceivedGifts(){
  const modal=document.getElementById('modalContent');if(!modal)return;
- modal.innerHTML='<h2>🎁 Aldığım Hediyeler</h2><p>Teslim edilen ödüllerin ve işlem bilgileri</p><div id="receivedGiftList" style="max-height:65dvh;overflow-y:auto;overscroll-behavior:contain">Yükleniyor…</div>';
+ modal.innerHTML='<h2>🎁 Aldığım Hediyeler</h2><p>Her teslim edilen hediye tarih ve saatiyle ayrı listelenir.</p><div id="receivedGiftList" style="max-height:65dvh;overflow-y:auto;overscroll-behavior:contain">Yükleniyor…</div>';
  document.getElementById('overlay').classList.add('show');
  const target=document.getElementById('receivedGiftList');
  try{
  const sess=await ensureSession();if(!sess?.access_token)throw Error('Tekrar giriş yapmalısın');
- const rows=await api('/rest/v1/rpc/loyalty_my_reward_summary','POST',{},sess.access_token);
+ const rows=await api('/rest/v1/rpc/loyalty_my_gift_history','POST',{},sess.access_token);
  if(!target.isConnected)return;
- const used=rows.filter(r=>Number(r.redeemed_count)>0);
- target.innerHTML=used.length?used.map(r=>'<article style="background:#fff8f1;border:1px solid #eadacb;border-radius:13px;padding:14px;margin:9px 0"><strong>'+safeLoyaltyText(r.business_name)+'</strong><p>'+safeLoyaltyText(r.campaign_name)+'</p><small>Alınan ödül sayısı: '+Number(r.redeemed_count)+'</small><div><small>Son teslim: '+(r.last_redeemed_at?new Date(r.last_redeemed_at).toLocaleString('tr-TR'):'—')+'</small></div><div style="color:#16844c;font-weight:750;margin-top:8px">✓ Teslim edildi</div></article>').join(''):'Henüz teslim edilmiş hediyen bulunmuyor.';
+ target.innerHTML=rows.length?rows.map((r,i)=>'<article style="background:#fff8f1;border:1px solid #eadacb;border-radius:13px;padding:14px;margin:9px 0"><small>Hediye #'+(rows.length-i)+'</small><div><strong>'+safeLoyaltyText(r.business_name)+'</strong></div><p>'+safeLoyaltyText(r.campaign_name)+'</p><small>Alınma tarihi: '+new Date(r.received_at).toLocaleString('tr-TR')+'</small><div style="color:#16844c;font-weight:750;margin-top:8px">✓ Teslim edildi</div></article>').join(''):'Henüz teslim edilmiş hediyen bulunmuyor.';
  }catch(e){if(target.isConnected)target.textContent='Hediye kayıtları yüklenemedi: '+e.message}
 }
 function renderAccount(){
