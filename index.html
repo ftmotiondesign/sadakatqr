@@ -336,7 +336,18 @@ let liveOfferRows=[];
 function favoriteStoreKey(){return 'sadakatqr_favorites_'+(authUser?.id||'guest')}
 function favoriteNames(){try{const v=JSON.parse(localStorage.getItem(favoriteStoreKey())||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string').slice(0,100):[]}catch{return []}}
 function saveFavorite(name){if(!name)return false;try{const names=favoriteNames();const next=names.includes(name)?names.filter(x=>x!==name):[...names,name];localStorage.setItem(favoriteStoreKey(),JSON.stringify(next));if(document.getElementById('favList'))renderFavorites();else if(document.getElementById('liveHomeOffers'))drawLiveOffers();return next.includes(name)}catch(err){alert('Favori kaydedilemedi: Tarayıcı depolama iznini kontrol edin.');return null}}
-async function recommendFavorite(name){try{const token=(await ensureSession())?.access_token;if(!token)throw Error('Önce giriş yapmalısın');const n=Number(await api('/rest/v1/rpc/loyalty_my_short_code','POST',{},token));if(!Number.isInteger(n)||n<100000)throw Error('Müşteri numarası alınamadı');const url=APP_URL+'?ref='+n;const value=name+' işletmesini SadakatQR üzerinden keşfet! İlk alışverişte beni desteklemek için bu bağlantıyla katıl: '+url;if(navigator.share){await navigator.share({title:'SadakatQR Tavsiyesi',text:value,url}).catch(err=>{if(err.name!=='AbortError')throw err})}else if(navigator.clipboard){await navigator.clipboard.writeText(value);alert('Kişisel referans bağlantın kopyalandı.')}else prompt('Tavsiye bağlantısını kopyala:',value)}catch(e){alert('Tavsiye paylaşımı: '+e.message)}}
+async function recommendFavorite(name){
+ try{
+  const token=(await ensureSession())?.access_token;if(!token)throw Error('Önce giriş yapmalısın');
+  const n=Number(await api('/rest/v1/rpc/loyalty_my_short_code','POST',{},token));
+  if(!Number.isInteger(n)||n<100000||n>999999)throw Error('Müşteri numarası alınamadı');
+  const code=String(n),formatted=code.slice(0,3)+' '+code.slice(3);
+  const url=APP_URL+'?ref='+code;
+  const message='🎁 SadakatQR Tavsiyesi\n\n'+name+' işletmesini sana tavsiye ediyorum!\n\n👤 Tavsiye kodum: '+formatted+'\n\nBu bağlantıyla katıl: '+url+'\n\nİlk alışverişini işletmede doğrulattığında bana 10 tavsiye puanı kazandırabilirsin.';
+  const whatsapp='https://api.whatsapp.com/send?text='+encodeURIComponent(message);
+  window.open(whatsapp,'_blank','noopener,noreferrer');
+ }catch(e){alert('Tavsiye paylaşımı: '+e.message)}
+}
 async function loadReferralStats(){try{const token=(await ensureSession())?.access_token;if(!token)return;const rows=await api('/rest/v1/rpc/loyalty_my_referral_stats','POST',{},token);const value=Array.isArray(rows)?rows[0]:rows;const p=document.getElementById('referralPoints'),c=document.getElementById('referralConfirmed');if(p)p.textContent=String(value.total_points??0);if(c)c.textContent=String(value.approved_count??0)}catch(e){const p=document.getElementById('referralPoints');if(p)p.textContent='Kurulum gerekli'}}
 async function acceptReferralFromLink(){const param=new URLSearchParams(location.search).get('ref');if(param&&/^[1-9][0-9]{5}$/.test(param))localStorage.setItem('sadakatqr_pending_referral',param);const code=localStorage.getItem('sadakatqr_pending_referral');if(!code||!/^[1-9][0-9]{5}$/.test(code)||!authUser)return;try{const token=(await ensureSession())?.access_token;if(!token)return;const result=await api('/rest/v1/rpc/loyalty_claim_referral','POST',{p_referrer_code:code},token);localStorage.removeItem('sadakatqr_pending_referral');history.replaceState(null,'',location.pathname);alert(result)}catch(e){if(!/function.*not found|schema cache/i.test(e.message)){localStorage.removeItem('sadakatqr_pending_referral');history.replaceState(null,'',location.pathname);alert('Referans: '+e.message)}}}
 function renderFavorites(){
