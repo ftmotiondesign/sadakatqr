@@ -303,14 +303,28 @@ function showLegal(type){
  modal.querySelector('#legalClose').addEventListener('click',hideModal);
  document.getElementById('overlay').classList.add('show');
 }
+async function showReceivedGifts(){
+ const modal=document.getElementById('modalContent');if(!modal)return;
+ modal.innerHTML='<h2>🎁 Aldığım Hediyeler</h2><p>Teslim edilen ödüllerin ve işlem bilgileri</p><div id="receivedGiftList" style="max-height:65dvh;overflow-y:auto;overscroll-behavior:contain">Yükleniyor…</div>';
+ document.getElementById('overlay').classList.add('show');
+ const target=document.getElementById('receivedGiftList');
+ try{
+ const sess=await ensureSession();if(!sess?.access_token)throw Error('Tekrar giriş yapmalısın');
+ const rows=await api('/rest/v1/rpc/loyalty_my_reward_summary','POST',{},sess.access_token);
+ if(!target.isConnected)return;
+ const used=rows.filter(r=>Number(r.redeemed_count)>0);
+ target.innerHTML=used.length?used.map(r=>'<article style="background:#fff8f1;border:1px solid #eadacb;border-radius:13px;padding:14px;margin:9px 0"><strong>'+safeLoyaltyText(r.business_name)+'</strong><p>'+safeLoyaltyText(r.campaign_name)+'</p><small>Alınan ödül sayısı: '+Number(r.redeemed_count)+'</small><div><small>Son teslim: '+(r.last_redeemed_at?new Date(r.last_redeemed_at).toLocaleString('tr-TR'):'—')+'</small></div><div style="color:#16844c;font-weight:750;margin-top:8px">✓ Teslim edildi</div></article>').join(''):'Henüz teslim edilmiş hediyen bulunmuyor.';
+ }catch(e){if(target.isConnected)target.textContent='Hediye kayıtları yüklenemedi: '+e.message}
+}
 function renderAccount(){
 const root=document.getElementById('tabContent');root.style.display='block';root.style.background='transparent';root.style.padding='0';
 const u=users()[0];
 const name=u?u.name:'Üye';const email=u?u.email:'';
-root.innerHTML='<h2 class="account-title">Hesabım</h2><p class="account-sub">Üyelik bilgilerin ve ayarların.</p><div class="account-person"><div class="account-avatar">👤</div><div><b id="accountName"></b><small id="accountEmail"></small></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">▦</div><div><strong>Kişisel QR Kodum</strong><small>Tüm anlaşmalı işletmeler için tek kod</small></div><button id="accountQr">Göster ›</button></div><div class="account-row"><div class="account-icon">✉</div><div><strong>E-posta</strong><small id="accountMail"></small></div></div><div class="account-row"><div class="account-icon">🔒</div><div><strong>Şifre ve güvenlik</strong><small>Şifre yenileme canlı üyelikte açılacak</small></div></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">ⓘ</div><div><strong>Nasıl Kullanılır?</strong><small>Sadakat Kartım hakkında kısa rehber</small></div><button id="accountHelp">Aç ›</button></div><div class="account-row"><div class="account-icon">🔔</div><div><strong>Bildirimler</strong><small>İzin ayarları canlı sistemde açılacak</small></div></div></div><button class="account-signout" id="accountLogout">↪ Hesaptan Çıkış Yap</button><div class="account-legal"><div class="account-legal-title">YASAL BİLGİLER</div><div class="account-legal-links"><button type="button" data-legal="kvkk">KVKK Aydınlatma</button><button type="button" data-legal="privacy">Gizlilik Politikası</button><button type="button" data-legal="terms">Kullanım Koşulları</button><button type="button" data-legal="cookies">Çerez Politikası</button></div></div><p class="account-hint">Geliştirme sürümü · Üyelik bağımsız Supabase sisteminde yönetilir.</p>';
+root.innerHTML='<h2 class="account-title">Hesabım</h2><p class="account-sub">Üyelik bilgilerin ve ayarların.</p><div class="account-person"><div class="account-avatar">👤</div><div><b id="accountName"></b><small id="accountEmail"></small></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">▦</div><div><strong>Kişisel QR Kodum</strong><small>Tüm anlaşmalı işletmeler için tek kod</small></div><button id="accountQr">Göster ›</button></div><div class="account-row"><div class="account-icon">🎁</div><div><strong>Aldığım Hediyeler</strong><small>Teslim edilen ödüllerim ve detayları</small></div><button id="accountReceivedGifts">Görüntüle ›</button></div><div class="account-row"><div class="account-icon">✉</div><div><strong>E-posta</strong><small id="accountMail"></small></div></div><div class="account-row"><div class="account-icon">🔒</div><div><strong>Şifre ve güvenlik</strong><small>Şifre yenileme canlı üyelikte açılacak</small></div></div></div><div class="account-panel"><div class="account-row"><div class="account-icon">ⓘ</div><div><strong>Nasıl Kullanılır?</strong><small>Sadakat Kartım hakkında kısa rehber</small></div><button id="accountHelp">Aç ›</button></div><div class="account-row"><div class="account-icon">🔔</div><div><strong>Bildirimler</strong><small>İzin ayarları canlı sistemde açılacak</small></div></div></div><button class="account-signout" id="accountLogout">↪ Hesaptan Çıkış Yap</button><div class="account-legal"><div class="account-legal-title">YASAL BİLGİLER</div><div class="account-legal-links"><button type="button" data-legal="kvkk">KVKK Aydınlatma</button><button type="button" data-legal="privacy">Gizlilik Politikası</button><button type="button" data-legal="terms">Kullanım Koşulları</button><button type="button" data-legal="cookies">Çerez Politikası</button></div></div><p class="account-hint">Geliştirme sürümü · Üyelik bağımsız Supabase sisteminde yönetilir.</p>';
 root.querySelector('#accountName').textContent=name;
 root.querySelector('#accountEmail').textContent=email;
 root.querySelector('#accountMail').textContent=email;
+root.querySelector('#accountReceivedGifts')?.addEventListener('click',showReceivedGifts);
 root.querySelector('#accountQr').addEventListener('click',showMemberQR);
 root.querySelector('#accountHelp').addEventListener('click',()=>showModal('how'));
 root.querySelector('#accountLogout').addEventListener('click',logout);
