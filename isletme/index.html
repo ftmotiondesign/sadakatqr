@@ -23,7 +23,7 @@ stamp:{title:'⭐ Damga Ver',body:'<p>Müşterinin SadakatQR kodunu gir ve aktif
 reward:{title:'🎁 Ödül Onayla',body:'<p>Müşterinin kodunu gir, aktif kampanyayı seç ve hak edilen ödülü kontrol et.</p><form id="rewardForm" class="action-box"><label for="rewardCustomer">Müşteri QR veya 6 Haneli Numara</label><input id="rewardCustomer" placeholder="Örn. 482156 veya QR kodu" required autocomplete="off"><label for="rewardCampaign">Kampanya</label><select id="rewardCampaign" required><option value="">Yükleniyor…</option></select><button class="button" type="submit" id="rewardCheck">Ödül Hakkını Kontrol Et</button><div class="scan-result" id="rewardFeedback" role="status" aria-live="polite"></div><button class="button" type="button" id="rewardDeliver" disabled>Ödülü Teslim Et</button></form>'},
 customers:{title:'👥 Müşterilerim',body:'<p>İşletmenin sadakat müşterileri ve işlem özetleri.</p><div class="action-box"><label for="customerSearch">Müşteri numarası ara</label><input id="customerSearch" placeholder="6 haneli numara" autocomplete="off"><div id="customersLive" role="status">Yükleniyor…</div></div>'},
 campaigns:{title:'📣 Kampanyalarım',body:'<p>İşletmenin sadakat kampanyalarını buradan yönet.</p><form class="action-box" id="campaignForm"><label for="campaignName">Kampanya adı</label><input id="campaignName" maxlength="120" minlength="3" required placeholder="Örn. 5 kahveye 1 kahve"><label for="campaignStamps">Hediye için gerekli damga</label><select id="campaignStamps"><option value="5">5 damga</option><option value="10">10 damga</option></select><button class="button" id="saveCampaign" type="submit">Kampanyayı Kaydet</button><p id="campaignMessage" class="muted" role="status" aria-live="polite"></p></form><div class="action-box"><strong>Kayıtlı kampanyalar</strong><div id="campaignList" class="empty-state">Yükleniyor…</div></div>'},
-advertise:{title:'📢 Sponsorlu Reklam Ver',body:'<p>Reklam alanını ve hedef bölgeyi seç. Başvurun ana yönetime gönderilir; ödeme ve onay sonrası yayınlanır.</p><form id="adRequestForm" class="action-box"><label>Reklam alanı</label><select id="adPlacement"><option value="home">Ana sayfa reklamı</option><option value="offers">Fırsatlar bölümü</option><option value="gifts">Müşteri · Aldığım Hediyeler</option><option value="regional_popup">İlk açılış · bölgesel popup</option></select><label>Kampanya</label><select id="adCampaign" required><option value="">Kampanya seç</option></select><label>İl (bölgesel popup için zorunlu)</label><input id="adCity" maxlength="80" placeholder="Örn. Çanakkale"><label>İlçe (isteğe bağlı)</label><input id="adDistrict" maxlength="80" placeholder="Örn. Merkez"><label>Yayın süresi</label><select id="adDays"><option value="30">30 gün</option><option value="90">90 gün</option><option value="365">365 gün</option></select><button class="button" type="submit">Başvuruyu Gönder</button><p id="adNotice" role="status"></p></form><div class="action-box"><strong>Başvurularım</strong><div id="adRequestsList">Yükleniyor…</div></div>'},
+advertise:{title:'📢 Sponsorlu Reklam Ver',body:'<p>Reklam alanını ve hedef bölgeyi seç. Başvurun ana yönetime gönderilir; ödeme ve onay sonrası yayınlanır.</p><form id="adRequestForm" class="action-box"><label>Reklam alanları (birden fazla seçebilirsin)</label><div id="adPlacementChoices" style="display:grid;gap:9px"><label style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span><input type="checkbox" name="adPlacement" value="home" checked> Ana Sayfa</span><b data-ad-price="home">199 TL</b></label><label style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span><input type="checkbox" name="adPlacement" value="offers" checked> Fırsatlar</span><b data-ad-price="offers">149 TL</b></label><label style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span><input type="checkbox" name="adPlacement" value="gifts"> Aldığım Hediyeler</span><b data-ad-price="gifts">99 TL</b></label><label style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span><input type="checkbox" name="adPlacement" value="regional_popup"> Bölgesel açılış popup</span><b data-ad-price="regional_popup">299 TL</b></label></div><div style="padding:13px;background:#fff3e8;border-radius:12px"><strong>Toplam: <span id="adTotal">348 TL</span></strong><small style="display:block">Test tarifesi · ödeme alınmaz. Seçilen yayın süresi fiyatı etkiler.</small></div><label>Kampanya</label><select id="adCampaign" required><option value="">Kampanya seç</option></select><label>İl (bölgesel popup için zorunlu)</label><input id="adCity" maxlength="80" placeholder="Örn. Çanakkale"><label>İlçe (isteğe bağlı)</label><input id="adDistrict" maxlength="80" placeholder="Örn. Merkez"><label>Yayın süresi</label><select id="adDays"><option value="30">30 gün</option><option value="90">90 gün</option><option value="365">365 gün</option></select><button class="button" type="submit">Başvuruyu Gönder</button><p id="adNotice" role="status"></p></form><div class="action-box"><strong>Başvurularım</strong><div id="adRequestsList">Yükleniyor…</div></div>'},
 reports:{title:'📊 Raporlar',body:'<p>İşletmenin gerçek damga ve ödül hareketleri.</p><div id="reportsLive" class="action-box" role="status">Rapor yükleniyor…</div>'}
 };
 let scanStream=null,scanTimer=null,scanBusy=false;
@@ -34,7 +34,17 @@ async function toggleScanner(){if(scanStream){stopScanner();return}const out=doc
 function openFeature(page){const p=panels[page];if(!p)return;previousFocus=document.activeElement;dialogTitle.textContent=p.title;dialogBody.innerHTML=p.body;overlay.classList.remove('login-hidden');document.body.classList.add('dialog-open');document.getElementById('dialogClose').focus();document.getElementById('featureNotice').textContent=page==='campaigns'?'Kampanyaları buradan oluşturabilir, aktifleştirebilir veya pasifleştirebilirsiniz.':page==='stamp'?'Damga işlemleri işletme yetkisiyle kaydedilir.':'Damga ve ödül kayıtları işletmenizin gerçek verileriyle görüntülenir.';if(page==='advertise')initAdvertise();if(page==='join')initJoinPanel();if(page==='campaigns')loadCampaigns();if(page==='stamp')loadStampCampaigns();if(page==='reward')loadRewardCampaigns();if(page==='customers'||page==='reports')loadBusinessInsights(page)}
 
 
-async function initAdvertise(){
+const adBasePrices={home:199,offers:149,gifts:99,regional_popup:299};
+function selectedAdPlacements(){return [...document.querySelectorAll('input[name="adPlacement"]:checked')].map(x=>x.value)}
+function calculateAdPrice(){
+ const days=Number(document.getElementById('adDays')?.value||30),multiplier=days===90?2.5:days===365?8:1;
+ const money=n=>new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n);
+ Object.entries(adBasePrices).forEach(([key,price])=>{const el=document.querySelector('[data-ad-price="'+key+'"]');if(el)el.textContent=money(Math.round(price*multiplier))});
+ const total=selectedAdPlacements().reduce((n,key)=>n+Math.round(adBasePrices[key]*multiplier),0);
+ const out=document.getElementById('adTotal');if(out)out.textContent=money(total);
+}
+dialogBody.addEventListener('change',e=>{if(e.target.name==='adPlacement'||e.target.id==='adDays')calculateAdPrice()});
+async function initAdvertise(){calculateAdPrice();
  const status=document.getElementById('adNotice'),list=document.getElementById('adRequestsList');
  if(!currentBusiness||currentBusiness.status!=='approved'){status.textContent='Reklam başvurusu için onaylı işletme gerekli.';return}
  try{
@@ -47,11 +57,20 @@ async function initAdvertise(){
 dialogBody.addEventListener('submit',async e=>{
  if(e.target.id!=='adRequestForm')return;e.preventDefault();
  const status=document.getElementById('adNotice');const btn=e.target.querySelector('button[type="submit"]');
- const placement=document.getElementById('adPlacement').value,city=document.getElementById('adCity').value.trim(),district=document.getElementById('adDistrict').value.trim();
- if(placement==='regional_popup'&&!city){status.textContent='Bölgesel popup için il seçilmeli.';return}
- btn.disabled=true;status.textContent='Başvuru gönderiliyor…';
- try{await request('/rest/v1/rpc/loyalty_submit_ad_request','POST',{p_campaign_id:document.getElementById('adCampaign').value,p_placement:placement,p_city:city||null,p_district:district||null,p_duration_days:Number(document.getElementById('adDays').value)},tokens.access_token);status.textContent='Başvuru alındı. Ana yönetim onayı bekleniyor.';await initAdvertise()}
- catch(err){status.textContent='Başvuru yapılamadı: '+err.message}finally{if(btn.isConnected)btn.disabled=false}
+ const placements=selectedAdPlacements(),city=document.getElementById('adCity').value.trim(),district=document.getElementById('adDistrict').value.trim();
+ if(!placements.length){status.textContent='En az bir reklam alanı seçmelisin.';return}
+ if(placements.includes('regional_popup')&&!city){status.textContent='Bölgesel popup için il seçilmeli.';return}
+ btn.disabled=true;status.textContent='Başvurular gönderiliyor…';
+ let sent=0;
+ try{
+  for(const placement of placements){
+   await request('/rest/v1/rpc/loyalty_submit_ad_request','POST',{p_campaign_id:document.getElementById('adCampaign').value,p_placement:placement,p_city:city||null,p_district:district||null,p_duration_days:Number(document.getElementById('adDays').value)},tokens.access_token);
+   sent++;
+  }
+  await initAdvertise();
+  status.textContent=sent+' reklam alanı için başvurular alındı. Toplam teklif: '+document.getElementById('adTotal').textContent+'. Ana yönetim onayı bekleniyor.';
+ }catch(err){status.textContent=sent+' başvuru kaydedildi, kalanları gönderilemedi: '+err.message;await initAdvertise()}
+ finally{if(btn.isConnected)btn.disabled=false}
 });
 async function initJoinPanel(){
  const area=document.getElementById('joinRequests');if(!area)return;
