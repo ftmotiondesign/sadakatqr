@@ -23,7 +23,7 @@ begin
  if v_code ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
    select id into v_customer from auth.users where id=v_code::uuid;
  elsif v_code ~ '^[0-9]{6}$' then
-   select user_id into v_customer from public.loyalty_customer_codes where customer_code=v_code;
+   select user_id into v_customer from public.loyalty_short_codes where short_code=v_code::integer;
  else raise exception 'Geçerli müşteri QR veya kodu girin'; end if;
  if v_customer is null then raise exception 'Müşteri bulunamadı';end if;
  insert into public.loyalty_enrollments(business_id,campaign_id,customer_user_id,approved_by)
