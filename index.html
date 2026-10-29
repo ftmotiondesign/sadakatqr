@@ -453,7 +453,10 @@ async function showGiftOffers(giftId){
  const sess=await ensureSession();if(!sess?.access_token)throw Error('Tekrar giriş yapmalısın');
  const rows=await api('/rest/v1/rpc/loyalty_sponsored_offers_for_gift','POST',{p_gift_id:giftId},sess.access_token);
  if(!target.isConnected)return;
- target.innerHTML=rows.length?rows.map(r=>'<article style="border:1px solid #e5d6c9;border-radius:13px;padding:14px;margin:9px 0"><small style="color:#93603d">Sponsorlu</small><h3 style="font-size:16px;margin:7px 0">'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+safeLoyaltyText(r.business_name)+'</p><small>Hediye için '+Number(r.stamps_required)+' damga gasync function loadCustomerCover(){
+ target.innerHTML=rows.length?rows.map(r=>'<article style="border:1px solid #e5d6c9;border-radius:13px;padding:14px;margin:9px 0"><small style="color:#93603d">Sponsorlu</small><h3 style="font-size:16px;margin:7px 0">'+safeLoyaltyText(r.campaign_name)+'</h3><p>'+safeLoyaltyText(r.business_name)+'</p><small>Hediye için '+Number(r.stamps_required)+' damga gerekli</small></article>').join(''):'Bu işletmenin şu anda yayınlanan sponsorlu kampanyası bulunmuyor.';
+ }catch(err){if(target.isConnected)target.textContent='Kampanyalar yüklenemedi: '+err.message}
+}
+async function loadCustomerCover(){
  const hero=document.querySelector('#dash .dash-top');if(!hero)return;
  try{
   const sess=await ensureSession();if(!sess?.access_token)return;
