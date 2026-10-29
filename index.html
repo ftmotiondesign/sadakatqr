@@ -202,11 +202,24 @@ async function forgotPassword(){
  if(!email){err.textContent='Önce e-posta adresini yaz.';return}
  try{await api('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_URL),'POST',{email});err.style.color='#417e52';err.textContent='Adres kayıtlıysa şifre yenileme e-postası gönderilir.'}catch(ex){err.textContent=/email rate limit exceeded|over_email_send_rate_limit/i.test(ex.message)?'E-posta gönderim sınırına ulaşıldı. Tekrar tekrar denemeyin; gönderim kotası yenilenmeli veya özel SMTP bağlanmalı.':ex.message}
 }
+async function loadShortMemberNumber(expectedId){
+ try{
+  const current=await ensureSession();
+  if(!current?.access_token)return;
+  const response=await api('/rest/v1/rpc/loyalty_my_short_code','POST',{},current.access_token);
+  if(authUser?.id!==expectedId)return;
+  const value=Number(response);
+  if(!Number.isInteger(value)||value<100000||value>999999)throw Error('Numara geçersiz');
+  $('#memberId').textContent='Müşteri No: '+String(value).slice(0,3)+' '+String(value).slice(3);
+ }catch(err){
+  if(authUser?.id===expectedId)$('#memberId').textContent='Üye No: '+expectedId.slice(0,8).toUpperCase();
+ }
+}
 function enter(u){
  if(!u)return;
  $('#welcome').classList.add('hidden');$('#dash').classList.add('active');
  $('#firstName').textContent=u.name.split(' ')[0];$('#memberName').textContent=u.name;
- $('#memberId').textContent='Üye No: '+u.id.slice(0,8).toUpperCase();
+ $('#memberId').textContent='Üye numarası yükleniyor…';loadShortMemberNumber(u.id);
  const box=$('#qrbox');box.innerHTML='';
  if(typeof QRCode!=='undefined')new QRCode(box,{text:'SADAKATQR:'+u.id,width:170,height:170,colorDark:'#231914',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
  else box.textContent='QR oluşturucu yüklenemedi';
