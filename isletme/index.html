@@ -39,9 +39,20 @@ async function loadCampaigns(){
  try{
  const rows=await request('/rest/v1/loyalty_campaigns?select=id,name,stamps_required,active,created_at&business_id=eq.'+encodeURIComponent(currentBusiness.id)+'&order=created_at.desc','GET',null,tokens.access_token);
  target.classList.remove('empty-state');
- target.innerHTML=Array.isArray(rows)&&rows.length?rows.map(x=>'<div style="border-bottom:1px solid #eee;padding:12px 0"><strong>'+htmlSafe(x.name)+'</strong><div class="muted">'+Number(x.stamps_required)+' damga · '+(x.active?'Aktif':'Pasif')+'</div></div>').join(''):'Henüz kampanya oluşturulmadı.';
+ target.innerHTML=Array.isArray(rows)&&rows.length?rows.map(x=>'<div style="border-bottom:1px solid #eee;padding:12px 0"><strong>'+htmlSafe(x.name)+'</strong><div class="muted">'+Number(x.stamps_required)+' damga · '+(x.active?'Aktif':'Pasif')+'</div><button type="button" class="button" style="margin-top:8px;padding:8px 12px" data-toggle-campaign="'+htmlSafe(x.id)+'" data-active="'+(x.active?'true':'false')+'">'+(x.active?'Pasifleştir':'Aktifleştir')+'</button></div>').join(''):'Henüz kampanya oluşturulmadı.';
  }catch(err){target.textContent='Kampanyalar yüklenemedi: '+err.message}
 }
+dialogBody.addEventListener('click',async e=>{
+ const button=e.target.closest('button[data-toggle-campaign]');
+ if(!button)return;
+ const id=button.dataset.toggleCampaign,newActive=button.dataset.active!=='true';
+ if(!currentBusiness||currentBusiness.status!=='approved'||!tokens?.access_token)return;
+ button.disabled=true;const prior=button.textContent;button.textContent='Güncelleniyor…';
+ try{
+ const rows=await request('/rest/v1/loyalty_campaigns?id=eq.'+encodeURIComponent(id)+'&business_id=eq.'+encodeURIComponent(currentBusiness.id),'PATCH',{active:newActive},tokens.access_token);
+ await loadCampaigns();
+ }catch(err){button.disabled=false;button.textContent=prior;alert('Durum değiştirilemedi: '+err.message)}
+});
 dialogBody.addEventListener('submit',async e=>{
  if(e.target.id!=='campaignForm')return;
  e.preventDefault();
