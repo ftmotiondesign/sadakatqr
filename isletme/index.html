@@ -44,6 +44,12 @@ document.querySelectorAll('[data-stat-detail]').forEach(btn=>btn.addEventListene
  const area=document.getElementById('statDetailBody');
  try{
   if(!currentBusiness||currentBusiness.status!=='approved')throw Error('Onaylı işletme girişi gerekli');
+  if(kind==='rewards'){
+   const gifts=await request('/rest/v1/rpc/loyalty_business_reward_history','POST',{},tokens.access_token);
+   if(!area.isConnected)return;
+   area.innerHTML='<p><strong>Toplam teslim: '+gifts.length+'</strong></p>'+(gifts.length?gifts.map(g=>'<article style="border:1px solid #ead9cc;border-radius:12px;padding:12px;margin:9px 0"><strong>🎁 '+htmlSafe(g.campaign_name)+'</strong><p style="margin:7px 0">Müşteri No: '+htmlSafe(g.customer_code||'—')+'</p><small>Ödül teslimi: '+new Date(g.redeemed_at).toLocaleString('tr-TR')+'</small><div style="color:#16844c;margin-top:6px;font-weight:700">✓ Teslim edildi</div></article>').join(''):'Henüz teslim edilmiş ödül bulunmuyor.');
+   return;
+  }
   const data=await request('/rest/v1/rpc/loyalty_business_insights','POST',{},tokens.access_token);
   if(!area.isConnected)return;
   const rows=Array.isArray(data)?data:[];
