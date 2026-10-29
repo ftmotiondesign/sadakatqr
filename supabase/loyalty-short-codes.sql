@@ -33,33 +33,23 @@ $$;
 revoke all on function public.loyalty_my_short_code() from public,anon;
 grant execute on function public.loyalty_my_short_code() to authenticated;
 
--- Yalnızca onaylı işletmeler, aktif kampanyalarında numarayı damgaya dönüştürebilir.
--- Bu, önce kurulmuş olan loyalty_issue_stamp(uuid,uuid) fonksiyonunu çağırır.
+-- Onaylı işletme dışında numara sorgulanamaz ve damga verilemez.
+-- Önkoşul: loyalty-issue-stamp.sql fonksiyonu kurulmuş olmalıdır.
 create or replace function public.loyalty_issue_stamp_code(
- p_campaign_id uuid,p_customer_code text
-)
-returns table(stamp_count bigint,stamps_required smallint)
-language plpgsql security invoker set search_path='' as $$
-declare v_customer_id uuid;
-begin
- if p_customer_code !~ '^[1-9][0-9]{5}$' then
-  raise exception 'Altı haneli müşteri numarası girin';
- end if;
- -- Lookup is confined to the definer helper, which itself checks approved ownership.
- return query select * from public.loyalty_issue_stamp_by_code(p_campaign_id,p_customer_code);
-end;
-$$;
--- Lookup helper keeps short-code table private, checks campaign ownership first.
-create or replace function public.loyalty_issue_stamp_by_code(
  p_campaign_id uuid,p_customer_code text
 )
 returns table(stamp_count bigint,stamps_required smallint)
 language plpgsql security definer set search_path='' as $$
 declare v_customer_id uuid;
 begin
+ if p_customer_code !~ '^[1-9][0-9]{5}$' then
+  raise exception 'Altı haneli müşteri numarası girin';
+ end if;
  if auth.uid() is null or not exists(
-  select 1 from public.loyalty_campaigns c join public.loyalty_businesses b on b.id=c.business_id
-  where c.id=p_campaign_id and c.active and b.status='approved' and b.owner_user_id=auth.uid()
+  select 1 from public.loyalty_campaigns c
+  join public.loyalty_businesses b on b.id=c.business_id
+  where c.id=p_campaign_id and c.active=true
+    and b.status='approved' and b.owner_user_id=auth.uid()
  ) then raise exception 'İşletme veya kampanya yetkisi yok'; end if;
  select sc.user_id into v_customer_id from public.loyalty_short_codes sc
  where sc.short_code=p_customer_code::integer;
@@ -67,6 +57,5 @@ begin
  return query select * from public.loyalty_issue_stamp(p_campaign_id,v_customer_id);
 end;
 $$;
-revoke all on function public.loyalty_issue_stamp_by_code(uuid,text) from public,anon,authenticated;
 revoke all on function public.loyalty_issue_stamp_code(uuid,text) from public,anon;
 grant execute on function public.loyalty_issue_stamp_code(uuid,text) to authenticated;
