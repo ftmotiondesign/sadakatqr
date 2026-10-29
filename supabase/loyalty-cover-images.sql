@@ -75,3 +75,12 @@ with check(bucket_id='loyalty-covers' and (
  select 1 from public.loyalty_businesses b where b.id::text=(storage.foldername(name))[2]
  and b.owner_user_id=auth.uid() and b.status='approved'))
 ));
+
+-- Required for storage upsert (existing-object lookup); only own files are readable by API.
+create policy loyalty_cover_owner_select on storage.objects for select to authenticated
+using(bucket_id='loyalty-covers' and (
+ ((storage.foldername(name))[1]='customer' and (storage.foldername(name))[2]=auth.uid()::text)
+ or ((storage.foldername(name))[1]='business' and exists(
+ select 1 from public.loyalty_businesses b
+ where b.id::text=(storage.foldername(name))[2] and b.owner_user_id=auth.uid()))
+));
