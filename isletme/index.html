@@ -60,6 +60,13 @@ document.querySelectorAll('[data-stat-detail]').forEach(btn=>btn.addEventListene
   area.querySelectorAll('[data-stat-customer]').forEach(b=>b.addEventListener('click',()=>{const c=b.dataset.statCustomer;if(c)showCustomerDetail(c)}));
  }catch(e){if(area.isConnected)area.textContent='Detaylar yüklenemedi: '+e.message}
 }));
+async function loadBusinessHeroCover(){
+ const hero=document.querySelector('#panelView .hero');if(!hero||!currentBusiness)return;
+ try{const rows=await request('/rest/v1/loyalty_cover_images?select=image_path&owner_type=eq.business&owner_id=eq.'+encodeURIComponent(currentBusiness.id),'GET',null,tokens.access_token);
+ const path=rows[0]?.image_path;hero.style.backgroundImage=path?'linear-gradient(90deg,rgba(43,25,17,.82),rgba(51,28,17,.5)),url("'+BASE+'/storage/v1/object/public/loyalty-covers/'+encodeURI(path)+'?t='+Date.now()+'")':'';
+ hero.style.backgroundSize='cover';hero.style.backgroundPosition='center';
+ }catch(e){}
+}
 async function initBusinessCover(){
  const msg=document.getElementById('coverMessage'),img=document.getElementById('coverPreview'),empty=document.getElementById('coverEmpty'),file=document.getElementById('coverFile');
  if(!currentBusiness){msg.textContent='İşletme kaydı gerekli';return}
@@ -75,10 +82,10 @@ async function initBusinessCover(){
  const res=await fetch(BASE+'/storage/v1/object/loyalty-covers/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+tokens.access_token,'Content-Type':f.type,'x-upsert':'true'},body:f});
  if(!res.ok)throw Error((await res.json()).message||'Yükleme başarısız');
  await request('/rest/v1/rpc/loyalty_set_cover','POST',{p_owner_type:'business',p_image_path:path},tokens.access_token);
- msg.textContent='Kapak kaydedildi.';setPreview(BASE+'/storage/v1/object/public/loyalty-covers/'+path+'?t='+Date.now());
+ msg.textContent='Kapak kaydedildi.';loadBusinessHeroCover();setPreview(BASE+'/storage/v1/object/public/loyalty-covers/'+path+'?t='+Date.now());
  }catch(e){msg.textContent='Kaydedilemedi: '+e.message}
  };
- document.getElementById('coverRemove').onclick=async()=>{try{await request('/rest/v1/rpc/loyalty_set_cover','POST',{p_owner_type:'business',p_image_path:null},tokens.access_token);setPreview('');file.value='';msg.textContent='Kapak kaldırıldı.'}catch(e){msg.textContent=e.message}};
+ document.getElementById('coverRemove').onclick=async()=>{try{await request('/rest/v1/rpc/loyalty_set_cover','POST',{p_owner_type:'business',p_image_path:null},tokens.access_token);setPreview('');file.value='';msg.textContent='Kapak kaldırıldı.';loadBusinessHeroCover()}catch(e){msg.textContent=e.message}};
 }
 const adBasePrices={home:199,offers:149,gifts:99,regional_popup:299};
 function selectedAdPlacements(){return [...document.querySelectorAll('input[name="adPlacement"]:checked')].map(x=>x.value)}
@@ -316,7 +323,7 @@ async function loadBusinessStatus(user){
  status.textContent='İşletme başvurusu kontrol ediliyor…';form.classList.add('login-hidden');
  try{
   const list=await request('/rest/v1/loyalty_businesses?select=id,name,status,city,district,sector&owner_user_id=eq.'+encodeURIComponent(user.id)+'&limit=1','GET',null,tokens.access_token);
-  currentBusiness=Array.isArray(list)?list[0]:null;showAutoBusinessQR(currentBusiness);loadDashboardStats();const locationBox=document.getElementById('locationSettings');locationBox.classList.toggle('login-hidden',!currentBusiness);if(currentBusiness){document.getElementById('businessCity').value=currentBusiness.city||'';document.getElementById('businessDistrict').value=currentBusiness.district||'';document.getElementById('businessSector').value=currentBusiness.sector||'';}
+  currentBusiness=Array.isArray(list)?list[0]:null;showAutoBusinessQR(currentBusiness);loadBusinessHeroCover();loadDashboardStats();const locationBox=document.getElementById('locationSettings');locationBox.classList.toggle('login-hidden',!currentBusiness);if(currentBusiness){document.getElementById('businessCity').value=currentBusiness.city||'';document.getElementById('businessDistrict').value=currentBusiness.district||'';document.getElementById('businessSector').value=currentBusiness.sector||'';}
   if(!currentBusiness){status.textContent='Henüz işletme başvurun yok. Aşağıdaki formu doldurup onaya gönderebilirsin.';form.classList.remove('login-hidden');banner.textContent='🔒 İşletme onaylanana kadar gerçek damga ve ödül işlemleri kapalı.'}
   else{const labels={pending:'Onay bekliyor',approved:'Onaylandı',rejected:'Reddedildi',suspended:'Askıya alındı'};status.textContent=currentBusiness.name+' · '+(labels[currentBusiness.status]||currentBusiness.status);banner.textContent=currentBusiness.status==='approved'?'✓ İşletme hesabın onaylı. Kampanya, damga ve ödül işlemlerini yönetebilirsin.':'🔒 İşletme yetkisi henüz aktif değil. Damga ve ödül işlemleri kapalı.'}
  }catch(e){
