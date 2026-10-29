@@ -168,7 +168,7 @@ function showModal(type){
  '<form onsubmit="submitAuth(event)">'+(type==='register'?'<label class="field">Ad Soyad<input id="aname" required minlength="3" autocomplete="name"></label>':'')+
  (type==='reset'?'':'<label class="field">E-posta<input type="email" id="email" required autocomplete="email"></label>')+
  '<label class="field">'+(type==='reset'?'Yeni Şifre':'Şifre')+'<div class="password-box"><input type="password" id="password" required minlength="8" autocomplete="'+(type==='register'||type==='reset'?'new-password':'current-password')+'"><button type="button" class="password-toggle" id="passwordToggle" onclick="togglePassword()" aria-label="Şifreyi göster" aria-pressed="false">👁</button></div></label>'+
- '<div id="err" class="error" role="status"></div><button class="primary" id="authSubmit" type="submit">'+(type==='register'?'Üye Ol':type==='reset'?'Şifreyi Kaydet':'Giriş Yap')+'</button>'+
+ (type==='reset'?'<label class="field">Yeni Şifre Tekrar<input type="password" id="passwordConfirm" required minlength="8" autocomplete="new-password"></label>':'')+'<div id="err" class="error" role="status"></div><button class="primary" id="authSubmit" type="submit">'+(type==='register'?'Üye Ol':type==='reset'?'Şifreyi Kaydet':'Giriş Yap')+'</button>'+
  (type==='login'?'<button class="secondary" type="button" onclick="forgotPassword()">Şifremi Unuttum</button>':'')+
  '<p class="notice">SadakatQR hesabın farklı cihazlarda da kullanılabilir. E-posta onayı gerekebilir.</p></form>';
  $('#modalContent').innerHTML='<h2>'+title+'</h2>'+body;$('#overlay').classList.add('show');
@@ -201,8 +201,9 @@ async function submitAuth(e){
  btn.disabled=true;btn.textContent='İşleniyor...';err.textContent='';authBusy=true;
  try{
   if(mode==='reset'){
+   if(password!==$('#passwordConfirm').value)throw Error('Şifreler eşleşmiyor.');
    if(!await ensureSession())throw Error('Bağlantının süresi doldu. Yeni şifre isteği gönder.');
-   await api('/auth/v1/user','PUT',{password},session.access_token);hideModal();history.replaceState(null,'',location.pathname);return;
+   await api('/auth/v1/user','PUT',{password},session.access_token);hideModal();history.replaceState(null,'',location.pathname);alert('Şifren başarıyla değiştirildi. Artık giriş yapabilirsin.');showModal('login');return;
   }
   const email=$('#email').value.trim().toLowerCase();
   if(mode==='register'){
@@ -303,12 +304,29 @@ function enter(u){
  if(new URLSearchParams(location.search).has('kampanya'))showCampaignJoinHandoff();
 }
 async function restoreAuth(){
- const url=new URL(location.href);let token=url.searchParams.get('access_token'),refresh=url.searchParams.get('refresh_token'),type=url.searchParams.get('type');
- const hash=new URLSearchParams(location.hash.slice(1));token=token||hash.get('access_token');refresh=refresh||hash.get('refresh_token');type=type||hash.get('type');
- const authError=hash.get('error_description')||url.searchParams.get('error_description');if(authError){showModal('login');$('#err').textContent='Bağlantının süresi dolmuş olabilir. Yeni şifre yenileme isteği gönder.';history.replaceState(null,'',location.pathname);return}
- if(token&&refresh){saveSession({access_token:token,refresh_token:refresh,expires_in:Number(hash.get('expires_in')||3600)});history.replaceState(null,'',location.pathname);if(type==='recovery'){showModal('reset');return}}
- if(authBusy)return;const s=await ensureSession();if(!s)return;
- try{authUser=await api('/auth/v1/user','GET',null,s.access_token);if(authUser?.id)enter(users()[0])}
+ const url=new URL(location.href),hash=new URLSearchParams(location.hash.slice(1));
+ const get=k=>url.searchParams.get(k)||hash.get(k);
+ const type=get('type'),authError=get('error_description')||get('error');
+ const clearAuthUrl=()=>{const clean=new URL(location.href);['access_token','refresh_token','expires_in','type','token_hash','code','error','error_code','error_description'].forEach(k=>clean.searchParams.delete(k));clean.hash='';history.replaceState(null,'',clean.pathname+clean.search)};
+ if(authError){showModal('login');$('#err').textContent='Bağlantı geçersiz veya süresi dolmuş. Yeni şifre yenileme bağlantısı iste.';clearAuthUrl();return}
+ try{
+  let token=get('access_token'),refresh=get('refresh_token');
+  if(token&&refresh){
+   saveSession({access_token:token,refresh_token:refresh,expires_in:Number(get('expires_in')||3600)});
+   clearAuthUrl();
+   if(type==='recovery'){showModal('reset');return}
+  }else if(get('token_hash')&&type==='recovery'){
+   const data=await api('/auth/v1/verify','POST',{token_hash:get('token_hash'),type:'recovery'});
+   saveSession(data);if(!session)throw Error('Şifre yenileme oturumu açılamadı.');
+   clearAuthUrl();showModal('reset');return;
+  }else if(get('code')){
+   const data=await api('/auth/v1/token?grant_type=pkce','POST',{auth_code:get('code'),code_verifier:sessionStorage.getItem('sadakatqr_pkce_verifier')||''});
+   saveSession(data);if(!session)throw Error('Bağlantı doğrulanamadı.');
+   clearAuthUrl();if(type==='recovery'){showModal('reset');return}
+  }
+ }catch(ex){clearAuthUrl();showModal('login');$('#err').textContent='Bağlantı doğrulanamadı: '+ex.message+' Yeni şifre bağlantısı iste.';return}
+ if(authBusy)return;const current=await ensureSession();if(!current)return;
+ try{authUser=await api('/auth/v1/user','GET',null,current.access_token);if(authUser?.id)enter(users()[0])}
  catch{session=null;authUser=null;localStorage.removeItem(SESSION_KEY)}
 }
 function showMemberQR(){const qr=document.querySelector('#qrbox img, #qrbox canvas');if(!qr){showDemo();return}document.querySelector('#modalContent').innerHTML='<h2>Kişisel QR Kodum</h2><p>İşletmede bu QR kodunu göster.</p><div style="background:white;padding:18px;border-radius:17px;display:grid;place-items:center" id="largeQR"></div>';const copy=qr.cloneNode(true);if(qr.tagName==='CANVAS'){const image=new Image();image.src=qr.toDataURL();copy.replaceWith?.(image);document.querySelector('#largeQR').appendChild(image)}else document.querySelector('#largeQR').appendChild(copy);document.querySelector('#largeQR img')?.style.setProperty('width','230px');document.querySelector('#largeQR img')?.style.setProperty('height','230px');document.querySelector('#overlay').classList.add('show')}
