@@ -257,15 +257,40 @@ async function loadRealLoyalty(expectedId){
   }).join(''):'<div class="muted" style="padding:16px">Henüz damga kaydın bulunmuyor. İşletmede QR kodunu göstererek başlayabilirsin.</div>';
  }catch(err){root.innerHTML='<div class="muted" style="padding:16px">Gerçek damga kayıtları henüz yüklenemedi: '+safeLoyaltyText(err.message)+'</div>'}
 }
+
+// Kampanya QR'ından gelen ziyaretçi giriş yaptıktan sonra kendi kodunu işletmeye gösterir.
+// Katılım, yalnızca işletme yetkilisi onay verdiğinde kaydedilir.
+async function showCampaignJoinHandoff(){
+ const params=new URLSearchParams(location.search),campaign=params.get('kampanya'),business=params.get('isletme');
+ if(!campaign||!business||!authUser?.id)return;
+ if(!/^[0-9a-f-]{36}$/i.test(campaign)||!/^[0-9a-f-]{36}$/i.test(business))return;
+ const modal=document.getElementById('modalContent');if(!modal)return;
+ modal.innerHTML='<h2>Kampanyaya Katılım</h2><p>İşletme kampanyasına katılmak için müşteri QR kodunuzu veya numaranızı kasadaki görevliye gösterin. <b>Katılım, işletme onayladıktan sonra gerçekleşir.</b></p><div id="handoffQR" style="display:grid;place-items:center;padding:14px;background:white;border-radius:16px"></div><p style="text-align:center;font-weight:750" id="handoffNumber">Müşteri numarası yükleniyor…</p><button class="primary" type="button" onclick="hideModal()">Tamam</button>';
+ const root=document.getElementById('handoffQR');
+ if(typeof QRCode!=='undefined')new QRCode(root,{text:'SADAKATQR:'+authUser.id,width:212,height:212,colorDark:'#231914',colorLight:'#fff'});
+ try{const token=(await ensureSession())?.access_token;if(token){const number=await api('/rest/v1/rpc/loyalty_my_short_code','POST',{},token);if(authUser?.id)document.getElementById('handoffNumber').textContent='Müşteri Numaram: '+number}}
+ catch(e){document.getElementById('handoffNumber').textContent='QR kodunuzu işletmeye gösterin'}
+ document.getElementById('overlay').classList.add('show');
+}
+async function loadMyEnrollments(){
+ if(!authUser?.id)return;
+ const token=(await ensureSession())?.access_token;if(!token)return;
+ try{const rows=await api('/rest/v1/rpc/loyalty_my_enrollments','POST',{},token);
+ const list=Array.isArray(rows)?rows:[];
+ const joined=document.getElementById('enrolledCampaignList');if(joined){joined.replaceChildren();for(const x of list){const card=document.createElement('div');card.className='card';card.style.padding='12px';card.style.marginBottom='8px';const h=document.createElement('strong');h.textContent=x.business_name+' · '+x.campaign_name;const p=document.createElement('p');p.className='muted';p.textContent='Katılım onaylandı · '+x.stamps_required+' damgada ödül';card.append(h,p);joined.append(card)}if(!list.length)joined.textContent='Henüz işletme tarafından onaylanan katılımınız yok.'}
+ }catch(e){const joined=document.getElementById('enrolledCampaignList');if(joined)joined.textContent='Katılım kayıtları şu anda yüklenemiyor.'}
+}
+
 function enter(u){
  if(!u)return;
  $('#welcome').classList.add('hidden');$('#dash').classList.add('active');
  $('#firstName').textContent=u.name.split(' ')[0];$('#memberName').textContent=u.name;
- $('#memberId').textContent='Üye numarası yükleniyor…';loadShortMemberNumber(u.id);loadRealLoyalty(u.id);
+ $('#memberId').textContent='Üye numarası yükleniyor…';loadShortMemberNumber(u.id);loadRealLoyalty(u.id);loadMyEnrollments();
  const box=$('#qrbox');box.innerHTML='';
  if(typeof QRCode!=='undefined')new QRCode(box,{text:'SADAKATQR:'+u.id,width:170,height:170,colorDark:'#231914',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
  else box.textContent='QR oluşturucu yüklenemedi';
  window.scrollTo(0,0);
+ if(new URLSearchParams(location.search).has('kampanya'))showCampaignJoinHandoff();
 }
 async function restoreAuth(){
  const url=new URL(location.href);let token=url.searchParams.get('access_token'),refresh=url.searchParams.get('refresh_token'),type=url.searchParams.get('type');
@@ -417,8 +442,8 @@ function showMemberStatPopup(kind){
 function showJoinedCampaignsPopup(){
  const source=document.getElementById('realLoyaltyCards'),modal=document.getElementById('modalContent');
  if(!source||!modal)return;
- modal.innerHTML='<h2>Katıldığım Kampanyalar</h2><p style="font-size:13px;color:#806d63">Kampanyalarını ve yeşil tikli damgalarını aşağı kaydırarak inceleyebilirsin.</p><div style="max-height:65dvh;overflow-y:auto;overscroll-behavior:contain;padding:4px 3px 12px"><div style="display:grid;gap:12px">'+source.innerHTML+'</div></div>';
- document.querySelector('#overlay').classList.add('show');
+ modal.innerHTML='<h2>Katıldığım Kampanyalar</h2><div id="enrolledCampaignList" style="margin:12px 0"></div><p style="font-size:13px;color:#806d63">Kampanyalarını ve yeşil tikli damgalarını aşağı kaydırarak inceleyebilirsin.</p><div style="max-height:65dvh;overflow-y:auto;overscroll-behavior:contain;padding:4px 3px 12px"><div style="display:grid;gap:12px">'+source.innerHTML+'</div></div>';
+ document.querySelector('#overlay').classList.add('show');loadMyEnrollments();
 }
 function renderJoinedCampaigns(){
  const root=document.getElementById('tabContent');
